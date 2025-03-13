@@ -1,0 +1,6 @@
+@Fikra_HostAddress = http://localhost:5076
+
+GET {{Fikra_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
