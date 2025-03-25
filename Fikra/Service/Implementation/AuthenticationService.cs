@@ -35,7 +35,8 @@ namespace SparkLink.Service.Implementation
             if (user != null)
             {
                 var CodeToGenerate = new Random();
-                var CodeToPlace = CodeToGenerate.Next(1000000);
+                var CodeToPlace = CodeToGenerate.Next(100000, 1000000);
+
 
                 user.Code = CodeToPlace.ToString();
                 var resultofUpdate = await _userManager.UpdateAsync(user);
