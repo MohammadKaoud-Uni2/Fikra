@@ -50,14 +50,18 @@ namespace Fikra.Controllers
             var roleName = "";
             switch (RegisterDto.RoleRequestd)
             {
-                case "1":
+                case "IdeaOwner":
 
                     roleName = "IdeaOwner";
                     break;
 
-                case "2":
+                case "Freelancer":
                     roleName = "Freelancer";
                     break;
+                case "Investor":
+                    roleName = "Investor";
+                    break;
+
                 default:
 
                     break;
