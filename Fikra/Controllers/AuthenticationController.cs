@@ -67,13 +67,12 @@ namespace Fikra.Controllers
                     break;
 
             }
-            var ImageUrl =await  _photoService.UploadPhoto(profilePicture);
+          
             var NewUser = new ApplicationUser
             {
                 Email = RegisterDto.Email,
                 UserName = RegisterDto.FirstName + RegisterDto.LastName,
                 Gender = RegisterDto.Gender,
-                ImageProfileUrl = ImageUrl,
                 LinkedinUrl = RegisterDto.LinkedinUrl,
                 FatherName = RegisterDto.FatherName,
                 Country = RegisterDto.Country,
@@ -85,8 +84,15 @@ namespace Fikra.Controllers
 
             };
             var resultofCreatingUser = await _userManager.CreateAsync(NewUser, RegisterDto.Password);
+            string imageUrl = "";
             if (resultofCreatingUser.Succeeded)
             {
+                if (profilePicture != null)
+                {
+                  imageUrl=await  _photoService.UploadPhoto(profilePicture);
+                }
+                NewUser.ImageProfileUrl= imageUrl;
+
                 var resultofAssignUserToRole = await _userManager.AddToRoleAsync(NewUser, roleName);
 
                 if (resultofAssignUserToRole.Succeeded)
