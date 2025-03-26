@@ -8,6 +8,7 @@ namespace SparkLink.Service.Interface
         public  Task<ApplicationUser> FindUserById(string Id);
         public  Task<ApplicationUser>FindUserByName (string Name);
         public  Task<ApplicationUser>FindUserByEmail(string Email);   
+        public Task<string>GetCurrentUserName();    
 
     }
 }

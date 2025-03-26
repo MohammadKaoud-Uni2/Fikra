@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SparkLink.Data;
 
@@ -11,9 +12,11 @@ using SparkLink.Data;
 namespace Fikra.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250326103245_SignaturesTable")]
+    partial class SignaturesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,45 +25,9 @@ namespace Fikra.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Fikra.Models.Contract", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<double?>("Budget")
-                        .HasColumnType("float");
-
-                    b.Property<string>("ContractPdfUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreateAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("IdeaOwnerId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<double?>("IdeaOwnerpercentage")
-                        .HasColumnType("float");
-
-                    b.Property<string>("InvestorId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IdeaOwnerId");
-
-                    b.HasIndex("InvestorId");
-
-                    b.ToTable("Contracts");
-                });
-
             modelBuilder.Entity("Fikra.Models.Signature", b =>
                 {
                     b.Property<string>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ApplicationUserId")
@@ -306,25 +273,6 @@ namespace Fikra.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
-                });
-
-            modelBuilder.Entity("Fikra.Models.Contract", b =>
-                {
-                    b.HasOne("SparkLink.Models.Identity.ApplicationUser", "IdeaOwner")
-                        .WithMany()
-                        .HasForeignKey("IdeaOwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SparkLink.Models.Identity.ApplicationUser", "Investor")
-                        .WithMany()
-                        .HasForeignKey("InvestorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("IdeaOwner");
-
-                    b.Navigation("Investor");
                 });
 
             modelBuilder.Entity("Fikra.Models.Signature", b =>

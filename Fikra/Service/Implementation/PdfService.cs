@@ -1,7 +1,12 @@
-﻿using Fikra.Service.Interface;
+﻿using Fikra.Models;
+using Fikra.Service.Interface;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using SparkLink.Models.Identity;
+using System.Reflection.Metadata.Ecma335;
 
 
 namespace Fikra.Service.Implementation
@@ -11,24 +16,82 @@ namespace Fikra.Service.Implementation
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IRSAService _rsaService;
+        private readonly ISignatureRepo _signatureRepo;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IContractRepo _contractRepo;
 
-        public PdfService(IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor, IRSAService rsaService)
+        public PdfService(IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor, IRSAService rsaService,ISignatureRepo signatureRepo,UserManager<ApplicationUser>UserManager,IContractRepo contractRepo)
         {
             _webHostEnvironment = webHostEnvironment;
             _httpContextAccessor = httpContextAccessor;
             _rsaService = rsaService;
+            _signatureRepo = signatureRepo;
+            _userManager = UserManager;
+            _contractRepo = contractRepo;
         }
 
-        public async Task<string> GenerateContract(string ideaOwnerName, string investorName, decimal budget, DateTime date, string ownerSignature, string investorSignature, byte[] logoBytes)
+        public async Task<string> GenerateContract(string ideaOwnerName, string investorName, double budget, DateTime date, string IdeaownerSignature, string investorSignature, byte[] logoBytes)
         {
             string contractsPath = Path.Combine(_webHostEnvironment.ContentRootPath, "contracts");
             if (!Directory.Exists(contractsPath))
                 Directory.CreateDirectory(contractsPath);
-
+            var firstPeerNameToCheck = await _userManager.FindByNameAsync(ideaOwnerName);
+            var secondPeerNametoCheck = await _userManager.FindByNameAsync(investorName);
+            if (firstPeerNameToCheck == null)
+            {
+                return $"IdeaOwner: {ideaOwnerName} is not Found";
+            }
+            if(secondPeerNametoCheck == null)
+            {
+                return $"Investor:{investorName} is not Found";
+            }
             string fileName = $"Contract_{ideaOwnerName} X {investorName}.pdf";
             string outputFilePath = Path.Combine(contractsPath, fileName);
-            var encryptedIdeaOwnerSignture = _rsaService.SignData(ownerSignature);
+  
+            var encryptedIdeaOwnerSignture = _rsaService.SignData(IdeaownerSignature);
             var encryptedInvestorSignture = _rsaService.SignData(investorSignature);
+            if (firstPeerNameToCheck != null && secondPeerNametoCheck != null)
+            {
+                var resultofCheckingExsiting = await _signatureRepo.GetTableAsNoTracking().FirstOrDefaultAsync(x=>x.ApplicationUserId==firstPeerNameToCheck.Id);
+                var verifyIdeaOwnerSignature = _rsaService.VerifySignature(IdeaownerSignature, encryptedIdeaOwnerSignture);
+                if (resultofCheckingExsiting!=null&&!verifyIdeaOwnerSignature)
+                {
+                    return $"IdeaOwner{ideaOwnerName} Signature is not Verified!!";
+                }
+                var resultofcheckingInvestor=await _signatureRepo.GetTableAsNoTracking().FirstOrDefaultAsync(x=>x.ApplicationUserId==secondPeerNametoCheck.Id);
+                var verifyInvestorSignature =  _rsaService.VerifySignature(investorSignature, encryptedInvestorSignture);
+                if (resultofcheckingInvestor != null && !verifyInvestorSignature)
+                {
+                    return $"Investor {investorName} Signature is not Verified!!";
+                }
+                if (firstPeerNameToCheck != null && secondPeerNametoCheck != null)
+                {
+                    if (resultofCheckingExsiting == null)
+                    {
+                        var IdeaOwnernewSignature = new Signature()
+                        {
+                            ApplicationUserId = firstPeerNameToCheck.Id,
+                            ApplicationUser = firstPeerNameToCheck,
+                            Sign = encryptedIdeaOwnerSignture,
+                        };
+                        await _signatureRepo.AddAsync(IdeaOwnernewSignature);
+                        await _signatureRepo.SaveChangesAsync();
+                    }
+                    if (resultofcheckingInvestor == null)
+                    {
+                        var InvestorNewSignature = new Signature()
+                        {
+                            ApplicationUserId = secondPeerNametoCheck.Id,
+                            ApplicationUser = secondPeerNametoCheck,
+                            Sign = encryptedInvestorSignture,
+                        };
+                        await _signatureRepo.AddAsync(InvestorNewSignature);
+                        await _signatureRepo.SaveChangesAsync();
+                    }
+
+                }
+            }
+            
 
 
             Document.Create(container =>
@@ -74,7 +137,7 @@ namespace Fikra.Service.Implementation
                             row.RelativeItem().Column(column =>
                             {
                                 column.Item().Text("Idea Owner Signature:").SemiBold();
-                                column.Item().Text(encryptedIdeaOwnerSignture).FontSize(12).Italic();
+                                column.Item().Text(IdeaownerSignature).FontSize(12).Italic();
                             });
 
                             row.RelativeItem().Column(column =>
@@ -91,9 +154,23 @@ namespace Fikra.Service.Implementation
                 });
             })
             .GeneratePdf(outputFilePath);
-            var test = _rsaService.VerifySignature(investorSignature, encryptedIdeaOwnerSignture);
             var request = _httpContextAccessor.HttpContext.Request;
             var PdfUrl = $"{request.Scheme}://{request.Host}/contracts/{fileName}";
+            var contract = new Contract()
+            {
+                ContractPdfUrl = PdfUrl,
+                CreateAt = DateTime.Now,
+                InvestorId = secondPeerNametoCheck.Id,
+                Investor = secondPeerNametoCheck,
+                IdeaOwner = firstPeerNameToCheck,
+                IdeaOwnerId = firstPeerNameToCheck.Id,
+                Budget = budget,
+                IdeaOwnerpercentage = 0.0,
+            };
+           await  _contractRepo.AddAsync(contract);
+            await _contractRepo.SaveChangesAsync();
+
+            
             return PdfUrl;
         }
 

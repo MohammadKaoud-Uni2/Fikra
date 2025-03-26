@@ -6,6 +6,7 @@ using SparkLink.Models.Identity;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Reflection.Emit;
 using SparkLink.Helper;
+using Fikra.Models;
 namespace SparkLink.Data
 {
     public class ApplicationDbContext:IdentityDbContext<ApplicationUser>
@@ -22,6 +23,7 @@ namespace SparkLink.Data
 
             base.OnModelCreating(builder);
         }
-
+        public DbSet<Signature> Signatures { get; set; }
+        public DbSet<Contract> Contracts { get; set; }
     }
 }

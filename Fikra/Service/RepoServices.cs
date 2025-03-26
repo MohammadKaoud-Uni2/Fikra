@@ -23,7 +23,8 @@ namespace SparkLink.Service
             services.AddScoped<IPdfService,PdfService>();
             services.AddScoped<IRSAService, RSAService>();
             services.AddSingleton<RSAKeyGenerator>();
-
+            services.AddScoped<ISignatureRepo, SignatureRepo>();
+            services.AddScoped<IContractRepo, contractRepo>();
             return services;    
         }
         public static IServiceCollection RegisterEmail(this IServiceCollection services,IConfiguration configuration)

@@ -1,3 +1,4 @@
+using Fikra.Mapper;
 using Fikra.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +29,7 @@ builder.Services.AddRepoService();
 builder.Services.JwtRegistering(builder.Configuration);
 builder.Services.RegisterEmail(builder.Configuration);
 builder.Services.RegKeyService(builder.Configuration);
+builder.Services.AutoMapReg();
 var app = builder.Build();
 
 

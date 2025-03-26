@@ -10,10 +10,12 @@ namespace SparkLink.Service.Implementation
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        public IdentityServices(UserManager<ApplicationUser>userManager,SignInManager<ApplicationUser>SignInManager)
+        private readonly IHttpContextAccessor _httpContextAccessor;   
+        public IdentityServices(UserManager<ApplicationUser>userManager,SignInManager<ApplicationUser>SignInManager,IHttpContextAccessor httpContextAccessor)
         {
             _userManager = userManager;
-            _signInManager=SignInManager;           
+            _signInManager=SignInManager;          
+            _httpContextAccessor = httpContextAccessor;
             
         }
         public async Task<ApplicationUser> FindUserByEmail(string Email)
@@ -63,6 +65,14 @@ namespace SparkLink.Service.Implementation
 
             }
             return null;
+        }
+       
+        
+
+        public async Task<string> GetCurrentUserName()
+        {
+            var currentUserName = _httpContextAccessor.HttpContext.User.Identity.Name;
+            return currentUserName;
         }
     }
 }
