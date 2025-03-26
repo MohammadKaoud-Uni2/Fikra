@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Fikra.Helper;
+using Fikra.Service.Implementation;
+using Fikra.Service.Interface;
+using Microsoft.AspNetCore.Identity;
 
 using SparkLink.Helper;
 using SparkLink.Service.Implementation;
@@ -17,7 +20,9 @@ namespace SparkLink.Service
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IPhotoService, PhotoService>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
-
+            services.AddScoped<IPdfService,PdfService>();
+            services.AddScoped<IRSAService, RSAService>();
+            services.AddSingleton<RSAKeyGenerator>();
 
             return services;    
         }

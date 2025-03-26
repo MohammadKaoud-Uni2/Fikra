@@ -17,7 +17,12 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="MimeKit" Version="4.11.0" />
+    <PackageReference Include="QuestPDF" Version="2025.1.7" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="contracts\" />
   </ItemGroup>
 
 </Project>

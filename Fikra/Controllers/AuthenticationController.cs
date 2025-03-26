@@ -1,7 +1,9 @@
 ﻿
+using Fikra.Service.Interface;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata;
 using SparkLink.Helper;
 using SparkLink.Models.Dto;
 using SparkLink.Models.Identity;
@@ -21,7 +23,9 @@ namespace Fikra.Controllers
         private readonly IEmailService _emailService;
         private readonly IAuthenticationService _authenticationService;
         private readonly IPhotoService _photoService;
-        public AuthenticationController(IIdentityServices IdentityServices, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ITokenRepo tokenRepo, IEmailService emailService, IAuthenticationService authenticationService,IPhotoService photoService)
+        private readonly IPdfService _IpdfService;
+        
+        public AuthenticationController(IIdentityServices IdentityServices, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ITokenRepo tokenRepo, IEmailService emailService, IAuthenticationService authenticationService,IPhotoService photoService,IPdfService pdfService)
         {
             this.identityServices = IdentityServices;
             _userManager = userManager;
@@ -30,6 +34,7 @@ namespace Fikra.Controllers
             _emailService = emailService;
             _authenticationService = authenticationService;
             _photoService = photoService;
+            _IpdfService = pdfService;
         }
         [HttpPost]
         [Route("Register")]
@@ -166,7 +171,7 @@ namespace Fikra.Controllers
             }
 
         }
-        [HttpPost]
+        [HttpGet]
         [Route("ResetPasswordOperation")]
         public async Task<IActionResult> ResetPasswordOperation([FromBody] ResetPasswordDto resetPasswordDto)
         {
@@ -193,6 +198,30 @@ namespace Fikra.Controllers
 
             }
 
+        }
+        [Route("GeneratePdf")]
+        [HttpGet]
+        //[Authorize("Bearer")]
+        public async Task<IActionResult> GeneratePdf()
+        {
+            // var IdeaOwner = new ApplicationUser();
+            //var Investor = new ApplicationUser();
+
+            //var secondUser = await _userManager.FindByIdAsync(userId);
+            //var secondUserRoles = await _userManager.GetRolesAsync(secondUser);
+            //if (secondUserRoles.Contains("IdeaOwner"))
+            //{
+            //    IdeaOwner = secondUser;
+            //}
+
+
+            var result = await _IpdfService.ReciveImage();
+            var pdfUrl = await _IpdfService.GenerateContract("mohamad", "Rami", 1221221.1m, DateTime.Now, "mohammadAhmadKaoud", "RamiNabeelYehay", result);
+            if (pdfUrl != null)
+            {
+                return Ok(pdfUrl);
+            }
+            return BadRequest("There Was A problem While Accessing the Pdf");
         }
 
     }
