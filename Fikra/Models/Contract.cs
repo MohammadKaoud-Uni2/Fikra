@@ -7,7 +7,7 @@ namespace Fikra.Models
     public class Contract
     {
         [Key]
-
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public string Id { get; set; }
         [ForeignKey(nameof(IdeaOwnerId))]
         public string IdeaOwnerId { get; set; }

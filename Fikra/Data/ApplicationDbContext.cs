@@ -25,5 +25,6 @@ namespace SparkLink.Data
         }
         public DbSet<Signature> Signatures { get; set; }
         public DbSet<Contract> Contracts { get; set; }
+        public DbSet<Request> Requests { get; set; }
     }
 }

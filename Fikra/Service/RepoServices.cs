@@ -25,6 +25,7 @@ namespace SparkLink.Service
             services.AddSingleton<RSAKeyGenerator>();
             services.AddScoped<ISignatureRepo, SignatureRepo>();
             services.AddScoped<IContractRepo, contractRepo>();
+            services.AddScoped<IRequestRepo,RequestRepo>();
             return services;    
         }
         public static IServiceCollection RegisterEmail(this IServiceCollection services,IConfiguration configuration)

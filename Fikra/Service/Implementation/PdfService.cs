@@ -53,14 +53,14 @@ namespace Fikra.Service.Implementation
             if (firstPeerNameToCheck != null && secondPeerNametoCheck != null)
             {
                 var resultofCheckingExsiting = await _signatureRepo.GetTableAsNoTracking().FirstOrDefaultAsync(x=>x.ApplicationUserId==firstPeerNameToCheck.Id);
-                var verifyIdeaOwnerSignature = _rsaService.VerifySignature(IdeaownerSignature, encryptedIdeaOwnerSignture);
-                if (resultofCheckingExsiting!=null&&!verifyIdeaOwnerSignature)
+                
+                if (resultofCheckingExsiting!=null&& !resultofCheckingExsiting.Sign.Equals(encryptedIdeaOwnerSignture))
                 {
                     return $"IdeaOwner{ideaOwnerName} Signature is not Verified!!";
                 }
                 var resultofcheckingInvestor=await _signatureRepo.GetTableAsNoTracking().FirstOrDefaultAsync(x=>x.ApplicationUserId==secondPeerNametoCheck.Id);
-                var verifyInvestorSignature =  _rsaService.VerifySignature(investorSignature, encryptedInvestorSignture);
-                if (resultofcheckingInvestor != null && !verifyInvestorSignature)
+                
+                if (resultofcheckingInvestor != null && !resultofcheckingInvestor.Sign.Equals(encryptedInvestorSignture))
                 {
                     return $"Investor {investorName} Signature is not Verified!!";
                 }
@@ -91,6 +91,8 @@ namespace Fikra.Service.Implementation
 
                 }
             }
+            var firstUserFullName=firstPeerNameToCheck.FirstName+firstPeerNameToCheck.FatherName+firstPeerNameToCheck.LastName;
+            var secondUserFullName=secondPeerNametoCheck.FirstName+secondPeerNametoCheck.FatherName+secondPeerNametoCheck.LastName;
             
 
 
@@ -114,8 +116,8 @@ namespace Fikra.Service.Implementation
                     page.Content().Column(col =>
                     {
                         col.Item().Text($"Date: {date:MMMM dd, yyyy}").AlignRight();
-                        col.Item().Text($"Idea Owner: {ideaOwnerName}").FontSize(12);
-                        col.Item().Text($"Investor: {investorName}").FontSize(12);
+                        col.Item().Text($"Idea Owner: {firstUserFullName}").FontSize(12);
+                        col.Item().Text($"Investor: {secondUserFullName}").FontSize(12);
                         col.Item().Text($"Budget: ${budget:N2}").FontSize(12);
 
                         col.Item().PaddingVertical(10);
@@ -143,7 +145,7 @@ namespace Fikra.Service.Implementation
                             row.RelativeItem().Column(column =>
                             {
                                 column.Item().Text("Investor Signature:").SemiBold();
-                                column.Item().Text(encryptedInvestorSignture).FontSize(12).Italic();
+                                column.Item().Text(investorSignature).FontSize(12).Italic();
                             });
                         });
                     });

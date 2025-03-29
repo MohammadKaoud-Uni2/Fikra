@@ -60,13 +60,19 @@ namespace Fikra.Controllers
             var userName = await _identityServices.GetCurrentUserName();
             var user = await _userManager.FindByNameAsync(userName);
             var resultoffindExistSignature = await _signatureRepo.GetTableAsNoTracking().FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id);
-            var resultofChecking=_IrsaService.VerifySignature(signatureDto.Sign, resultoffindExistSignature.Sign);
-            if (resultofChecking)
+            var encrypted = _IrsaService.SignData(signatureDto.Sign);
+            if (encrypted.Equals(resultoffindExistSignature.Sign))
             {
                 return Ok("Person Signature has been  Verified Successfully");
+
             }
             return BadRequest("Person Signature is  Not Verified !!!!");
-            
+
+
+
+
+
+
         }
     }
 }

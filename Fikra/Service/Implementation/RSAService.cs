@@ -1,4 +1,5 @@
 ﻿using Fikra.Service.Interface;
+using MimeKit.Cryptography;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -36,6 +37,12 @@ namespace Fikra.Service.Implementation
             byte[] dataBytes = Encoding.UTF8.GetBytes(data);
             byte[] signatureBytes = Convert.FromBase64String(signature);
             return _rsa.VerifyData(dataBytes, signatureBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        }
+        public string DecryptData(string encryptedData)
+        {
+            byte[] encryptedBytes = Convert.FromBase64String(encryptedData);
+            byte[] decryptedBytes = _rsa.Decrypt(encryptedBytes, RSAEncryptionPadding.Pkcs1);
+            return Encoding.UTF8.GetString(decryptedBytes);
         }
     }
 }

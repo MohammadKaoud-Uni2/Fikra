@@ -39,7 +39,7 @@ namespace Fikra.Controllers
         [HttpPost]
         [Route("Register")]
 
-        public async Task<IActionResult> Register([FromForm] RegisterDto RegisterDto ,[FromForm]IFormFile profilePicture)
+        public async Task<IActionResult> Register([FromForm] RegisterDto RegisterDto ,[FromForm]IFormFile?profilePicture)
         {
             ApplicationUser userToFind = await identityServices.FindUserByName(RegisterDto.FirstName + RegisterDto.LastName);
             userToFind = await identityServices.FindUserByEmail(RegisterDto.Email);

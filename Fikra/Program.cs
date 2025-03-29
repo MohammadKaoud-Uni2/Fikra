@@ -1,3 +1,4 @@
+using Fikra.Hubs;
 using Fikra.Mapper;
 using Fikra.Service;
 using Microsoft.AspNetCore.Identity;
@@ -25,6 +26,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Password.RequireDigit = true;
 
 }).AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
+builder.Services.AddSignalR();
 builder.Services.AddRepoService();
 builder.Services.JwtRegistering(builder.Configuration);
 builder.Services.RegisterEmail(builder.Configuration);
@@ -38,11 +40,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 app.UseCors(options =>
 {
     options.AllowAnyHeader();
     options.AllowAnyMethod();
-    options.WithOrigins("______Rami____________");
+    options.SetIsOriginAllowed(origin => true);
     options.AllowCredentials();
     options.WithExposedHeaders();
 });
@@ -66,9 +69,16 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.UseHttpsRedirection();
+
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.MapControllers();
+app.UseEndpoints(endpoints =>
+{
+   
+    endpoints.MapControllers();
+    endpoints.MapHub<ContractHub>("Hubs/ContractHub");
+});
+//app.MapControllers();
 
 app.Run();
