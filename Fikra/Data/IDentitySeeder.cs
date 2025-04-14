@@ -24,6 +24,16 @@ namespace SparkLink.Data
                
 
             }
+            if (roleManager.Roles.FirstOrDefault(x => x.Name == "Admin")==null)
+            {
+                var result = await roleManager.CreateAsync(new IdentityRole("Admin"));
+                if (result.Succeeded)
+                {
+                    Console.WriteLine("AdminRole has Been Created Successfully");
+                    return;
+                }
+                return;
+            }
 
         }
     }

@@ -7,10 +7,12 @@ namespace SparkLink.Service.Implementation
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IWebHostEnvironment _environment;
-        public PhotoService(IHttpContextAccessor httpContextAccessor, IWebHostEnvironment webHostEnvironment)
+        private readonly IConfiguration _configuration;
+        public PhotoService(IHttpContextAccessor httpContextAccessor, IWebHostEnvironment webHostEnvironment,IConfiguration configuration)
         {
             _httpContextAccessor = httpContextAccessor;
             _environment = webHostEnvironment;
+            _configuration = configuration;
 
         }
         public async Task<string> UploadPhoto(IFormFile profilePicture)
@@ -28,7 +30,7 @@ namespace SparkLink.Service.Implementation
                 return "Invalid file format. Only JPEG, PNG, and JPG are allowed.";
             }
 
-            var uniqueFileName = $"{Guid.NewGuid()}{fileExtension}";
+            var uniqueFileName = $"{profilePicture.FileName}";
 
          
             var uploadsFolder = Path.Combine(_environment.ContentRootPath, "images", "profilePictures");
@@ -47,9 +49,9 @@ namespace SparkLink.Service.Implementation
                 await profilePicture.CopyToAsync(stream);
             }
 
-            
+            var customUrl = _configuration["AppSettings:BaseUrl"];
             var request = _httpContextAccessor.HttpContext.Request;
-            var imageUrl = $"{request.Scheme}://{request.Host}/images/profilePictures/{uniqueFileName}";
+            var imageUrl = $"{customUrl}images/profilePictures/{uniqueFileName}";
 
             return imageUrl;
         }

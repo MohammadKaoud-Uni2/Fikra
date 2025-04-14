@@ -115,7 +115,7 @@ namespace Fikra.Controllers
                 }
                 return BadRequest("There Was  A problem While Assign Role To user");
             }
-            return BadRequest("There Was A problwem While Creating the User ");
+            return BadRequest($"There Was A problwem While Creating the User With Detailes :{resultofCreatingUser.Errors} ");
 
         }
         [HttpPost]
@@ -137,7 +137,7 @@ namespace Fikra.Controllers
                     };
                     if (response != null)
                     {
-                        var emailSendingResult = await _emailService.SendEmail(user.Email, "Welcome Prince", "Say Hello from our Company ");
+                       var emailSendingResult = await _emailService.SendEmail(user.Email, "Welcome Prince", "Say Hello from our Company ");
 
                         return Ok(response);
                     }

@@ -20,11 +20,53 @@ namespace SparkLink.Data
             builder.Entity<ApplicationUser>()
             .Property(b => b.Code)
             .HasConversion(new EncryptedStringConverter(_encryptionProvider));
+            builder.Entity<Contract>()
+           .HasOne(c => c.IdeaOwner)
+           .WithMany() 
+           .HasForeignKey(c => c.IdeaOwnerId)
+           .OnDelete(DeleteBehavior.Restrict); 
+
+            builder.Entity<Contract>()
+                .HasOne(c => c.Investor)
+                .WithMany() 
+                .HasForeignKey(c => c.InvestorId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<Request>()
+        .HasOne(c => c.Investor)
+        .WithMany()
+        .HasForeignKey(c => c.InvestorId)
+        .OnDelete(DeleteBehavior.Restrict);
+                builder.Entity<Request>()
+        .HasOne(c => c.IdeaOwner)
+        .WithMany()
+        .HasForeignKey(c => c.IdeaOwnerId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+
+
+            builder.Entity<Transaction>()
+           .HasOne(c => c.IdeaOwner)
+           .WithMany()
+           .HasForeignKey(c => c.IdeaOwnerId)
+           .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Transaction>()
+                .HasOne(c => c.Investor)
+                .WithMany()
+                .HasForeignKey(c => c.InvestorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
 
             base.OnModelCreating(builder);
         }
         public DbSet<Signature> Signatures { get; set; }
         public DbSet<Contract> Contracts { get; set; }
         public DbSet<Request> Requests { get; set; }
+        public DbSet<Transaction> Transactions { get; set; }
+
+        public DbSet<StripeCustomer> StripeCustomers { get; set; }
+        public DbSet<StripeAccount>StripeAccounts { get; set; }
+
     }
 }

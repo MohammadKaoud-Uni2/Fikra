@@ -9,11 +9,11 @@ namespace Fikra.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public string Id { get; set; }
-        [ForeignKey(nameof(IdeaOwnerId))]
+      
         public string IdeaOwnerId { get; set; }
         public ApplicationUser IdeaOwner { get; set; }
 
-        [ForeignKey(nameof(InvestorId))]
+       
         public string InvestorId { get; set; }
         public ApplicationUser Investor {  get; set; }
         

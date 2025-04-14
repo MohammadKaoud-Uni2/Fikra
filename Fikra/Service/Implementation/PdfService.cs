@@ -19,8 +19,9 @@ namespace Fikra.Service.Implementation
         private readonly ISignatureRepo _signatureRepo;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IContractRepo _contractRepo;
+        private readonly IConfiguration _configuration;
 
-        public PdfService(IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor, IRSAService rsaService,ISignatureRepo signatureRepo,UserManager<ApplicationUser>UserManager,IContractRepo contractRepo)
+        public PdfService(IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor, IRSAService rsaService,ISignatureRepo signatureRepo,UserManager<ApplicationUser>UserManager,IContractRepo contractRepo,IConfiguration configuration)
         {
             _webHostEnvironment = webHostEnvironment;
             _httpContextAccessor = httpContextAccessor;
@@ -156,8 +157,9 @@ namespace Fikra.Service.Implementation
                 });
             })
             .GeneratePdf(outputFilePath);
+            var customUrl = _configuration["AppSettings:BaseUrl"];
             var request = _httpContextAccessor.HttpContext.Request;
-            var PdfUrl = $"{request.Scheme}://{request.Host}/contracts/{fileName}";
+            var PdfUrl = $"{customUrl}contracts/{fileName}";
             var contract = new Contract()
             {
                 ContractPdfUrl = PdfUrl,

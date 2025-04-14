@@ -12,7 +12,7 @@ using SparkLink.Data;
 namespace Fikra.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250313131128_init")]
+    [Migration("20250404120932_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -24,6 +24,191 @@ namespace Fikra.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("Fikra.Models.Contract", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<double?>("Budget")
+                        .HasColumnType("float");
+
+                    b.Property<string>("ContractPdfUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreateAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("IdeaOwnerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<double?>("IdeaOwnerpercentage")
+                        .HasColumnType("float");
+
+                    b.Property<string>("InvestorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("IdeaOwnerId");
+
+                    b.HasIndex("InvestorId");
+
+                    b.ToTable("Contracts");
+                });
+
+            modelBuilder.Entity("Fikra.Models.Request", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("IdeaOwnerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("InvestorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("IdeaOwnerId");
+
+                    b.HasIndex("InvestorId");
+
+                    b.ToTable("Requests");
+                });
+
+            modelBuilder.Entity("Fikra.Models.Signature", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Sign")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId")
+                        .IsUnique();
+
+                    b.ToTable("Signatures");
+                });
+
+            modelBuilder.Entity("Fikra.Models.StripeAccount", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("BusinessType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("StripeAccountId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("StripeAccounts");
+                });
+
+            modelBuilder.Entity("Fikra.Models.StripeCustomer", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("StripeCustomerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("StripeCustomers");
+                });
+
+            modelBuilder.Entity("Fikra.Models.Transaction", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<double>("Amount")
+                        .HasColumnType("float");
+
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("IdeaOwnerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("InvestorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StripePaymentIntentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("IdeaOwnerId");
+
+                    b.HasIndex("InvestorId");
+
+                    b.ToTable("Transactions");
+                });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
@@ -255,6 +440,108 @@ namespace Fikra.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Fikra.Models.Contract", b =>
+                {
+                    b.HasOne("SparkLink.Models.Identity.ApplicationUser", null)
+                        .WithMany("contracts")
+                        .HasForeignKey("ApplicationUserId");
+
+                    b.HasOne("SparkLink.Models.Identity.ApplicationUser", "IdeaOwner")
+                        .WithMany()
+                        .HasForeignKey("IdeaOwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SparkLink.Models.Identity.ApplicationUser", "Investor")
+                        .WithMany()
+                        .HasForeignKey("InvestorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("IdeaOwner");
+
+                    b.Navigation("Investor");
+                });
+
+            modelBuilder.Entity("Fikra.Models.Request", b =>
+                {
+                    b.HasOne("SparkLink.Models.Identity.ApplicationUser", null)
+                        .WithMany("Requests")
+                        .HasForeignKey("ApplicationUserId");
+
+                    b.HasOne("SparkLink.Models.Identity.ApplicationUser", "IdeaOwner")
+                        .WithMany()
+                        .HasForeignKey("IdeaOwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SparkLink.Models.Identity.ApplicationUser", "Investor")
+                        .WithMany()
+                        .HasForeignKey("InvestorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("IdeaOwner");
+
+                    b.Navigation("Investor");
+                });
+
+            modelBuilder.Entity("Fikra.Models.Signature", b =>
+                {
+                    b.HasOne("SparkLink.Models.Identity.ApplicationUser", "ApplicationUser")
+                        .WithOne("signature")
+                        .HasForeignKey("Fikra.Models.Signature", "ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+                });
+
+            modelBuilder.Entity("Fikra.Models.StripeAccount", b =>
+                {
+                    b.HasOne("SparkLink.Models.Identity.ApplicationUser", "ApplicationUser")
+                        .WithMany()
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+                });
+
+            modelBuilder.Entity("Fikra.Models.StripeCustomer", b =>
+                {
+                    b.HasOne("SparkLink.Models.Identity.ApplicationUser", "ApplicationUser")
+                        .WithMany()
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+                });
+
+            modelBuilder.Entity("Fikra.Models.Transaction", b =>
+                {
+                    b.HasOne("SparkLink.Models.Identity.ApplicationUser", null)
+                        .WithMany("transactions")
+                        .HasForeignKey("ApplicationUserId");
+
+                    b.HasOne("SparkLink.Models.Identity.ApplicationUser", "IdeaOwner")
+                        .WithMany()
+                        .HasForeignKey("IdeaOwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SparkLink.Models.Identity.ApplicationUser", "Investor")
+                        .WithMany()
+                        .HasForeignKey("InvestorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("IdeaOwner");
+
+                    b.Navigation("Investor");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -304,6 +591,18 @@ namespace Fikra.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("SparkLink.Models.Identity.ApplicationUser", b =>
+                {
+                    b.Navigation("Requests");
+
+                    b.Navigation("contracts");
+
+                    b.Navigation("signature")
+                        .IsRequired();
+
+                    b.Navigation("transactions");
                 });
 #pragma warning restore 612, 618
         }
