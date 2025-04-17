@@ -130,10 +130,13 @@ namespace Fikra.Controllers
                 {
                     var rolesAssignToUser = await _userManager.GetRolesAsync(user);
                     var JwtToken = await _tokenRepo.GenerateToken(rolesAssignToUser, user);
+
                     var response = new LoginResponseDto()
                     {
                         Token = JwtToken,
                         UserName = user.UserName,
+                        ProfilePictureUrl=user.ImageProfileUrl,
+                        
                     };
                     if (response != null)
                     {

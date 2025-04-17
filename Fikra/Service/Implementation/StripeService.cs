@@ -41,6 +41,7 @@ namespace Fikra.Service.Implementation
             var customer = await service.CreateAsync(options);
 
             return customer.Id;
+
            
         }
 
@@ -86,16 +87,26 @@ namespace Fikra.Service.Implementation
 
         public async  Task<decimal> GetPlatformBalance()
         {
-            var service = new BalanceService();
-            var balance = await service.GetAsync();
+            var feeService = new ApplicationFeeService();
+            var fees = await feeService.ListAsync(new ApplicationFeeListOptions
+            {
+                Limit = 100 
+            });
 
-            return balance.Available[0].Amount / 100m;
+            decimal finalResult = 0;
+
+            foreach (var fee in fees)
+            {
+                finalResult += fee.Amount / 100m;
+            }
+
+            return finalResult;
         }
 
-        public async Task<string> SimulateInvestment(string investorCustomerId, string ideaOwnerAccountId, decimal amount)
+        public async Task<string> SimulateInvestment(string investorCustomerId, string ideaOwnerAccountId, double  amount,bool toAdmin)
         {
             var accountService = new AccountService();
-
+            
           
             var updateOptions = new AccountUpdateOptions
             {
@@ -124,10 +135,17 @@ namespace Fikra.Service.Implementation
             {
                 throw new Exception("Transfers capability not active after waiting.");
             }
+            long amountInCents = 0;
+            long applicationFee = 0;
 
-          
-            var amountInCents = (long)(amount * 100);
-            var applicationFee = (long)(amount * 0.05m * 100); 
+            if (toAdmin==false)
+            {
+                 amountInCents = (long)(amount * 100);
+                applicationFee = (long)(amount * 0.05 * 100);
+            }
+             amountInCents = (long)(amount * 100);
+            applicationFee = 0;
+
 
             var options = new PaymentIntentCreateOptions
             {
@@ -169,31 +187,7 @@ namespace Fikra.Service.Implementation
         }
 
        
-        public async Task<string> TransferThroughAdminAsync(string investorAccountId, string ideaOwnerAccountId, decimal totalProfit)
-        {
-          
-            long totalAmountInCents = (long)(totalProfit * 100);
-
-      
-            decimal platformFee = totalProfit * 0.05m;
-            decimal payoutAmount = totalProfit - platformFee;
-
-            long payoutInCents = (long)(payoutAmount * 100);
-
-         
-            var transferService = new TransferService();
-
-            var transfer = await transferService.CreateAsync(new TransferCreateOptions
-            {
-                Amount = payoutInCents,
-                Currency = "usd",
-                Destination = ideaOwnerAccountId,
-                Description = $"Payout to Idea Owner after 5% platform fee deduction from total profit ${totalProfit}"
-            });
-
-            return transfer.Id;
-        }
-
+       
      
         public async Task<string> CreateConnectedAccount(string Email,string FirstName,string LastName,string UserName,string ?PostCode,string? state,string? city)
         {
@@ -299,6 +293,7 @@ namespace Fikra.Service.Implementation
                 }
 
                 return account.Id;
+               
             }
             catch (StripeException e)
             {
@@ -307,6 +302,52 @@ namespace Fikra.Service.Implementation
             }
         }
 
-    
+
+        async Task<decimal> IStripeService.GetCustomerBalance(string customerId)
+        {
+            try
+            {
+
+                var requestOptions = new RequestOptions
+                {
+                    StripeAccount = customerId
+                };
+
+                var balanceService = new BalanceService();
+                var balance = await balanceService.GetAsync(requestOptions);
+
+              
+                var availableEur = balance.Available
+                    .FirstOrDefault(b => b.Currency.Equals("eur", StringComparison.OrdinalIgnoreCase))?.Amount ?? 0;
+
+                var instantEur = balance.InstantAvailable
+                    .FirstOrDefault(b => b.Currency.Equals("eur", StringComparison.OrdinalIgnoreCase))?.Amount ?? 0;
+
+                var totalCents = availableEur + instantEur;
+
+                Console.WriteLine($"Available: {availableEur}, Instant: {instantEur}");
+
+                return totalCents / 100m; 
+            }
+            catch (StripeException ex)
+            {
+                Console.WriteLine($"Error getting balance for account {customerId}: {ex.Message}");
+                return -1m;
+            }
+        }
+
+        public async  Task<string> SimulateInvestmentToAdmin(string investorCustomerId, string AdminConnectedAccountId, double amount)
+        {
+           var result=await SimulateInvestment(investorCustomerId, AdminConnectedAccountId, amount,true);
+            if (result != null) return result;
+            else return null;
+        }
+
+        public async Task<string> SimulateInvestmentFromAdmin(string AdminCustomerId, string IdeaOwnerAccountId, double amount)
+        {
+            var result=await SimulateInvestment(AdminCustomerId, IdeaOwnerAccountId, amount,false);
+            if (result != null) return result;
+            else return null;
+        }
     }
 }

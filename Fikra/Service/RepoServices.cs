@@ -28,6 +28,8 @@ namespace SparkLink.Service
             services.AddScoped<IRequestRepo,RequestRepo>();
             services.AddScoped<IStripeService, StripeService>();
             services.AddScoped<IStripeAccountsRepo,StripeAccountRepo>();
+            services.AddScoped<IStripeCustomer,StripeCustomerRepo>();
+            services.AddScoped<ITransictionRepo,TransactionRepo>();
             return services;    
         }
         public static IServiceCollection RegisterEmail(this IServiceCollection services,IConfiguration configuration)

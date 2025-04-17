@@ -3,7 +3,7 @@
     public class TransferRequestDto
     {
         public string InvestorAccountId { get; set; }
-        public string IdeaOwnerAccountId { get; set; }
-        public decimal TotalProfit { get; set; } 
+       
+        public double TotalProfit { get; set; } 
     }
 }

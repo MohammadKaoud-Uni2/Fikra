@@ -53,7 +53,8 @@ using (var scope = app.Services.CreateScope())
 {
     scope.ServiceProvider.GetService<ApplicationDbContext>();
     var roleManager = scope.ServiceProvider.GetService<RoleManager<IdentityRole>>();
-    await IDentitySeeder.seedRoles(roleManager);
+    var userManager=scope.ServiceProvider.GetService<UserManager<ApplicationUser>>();
+    await IDentitySeeder.seedRoles(roleManager,userManager);
 }
 app.UseStaticFiles(new StaticFileOptions
 {

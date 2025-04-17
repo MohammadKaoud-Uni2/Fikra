@@ -10,11 +10,10 @@ namespace Fikra.Service.Interface
         public Task<string> CreatePayout(string ideaOwnerAccountId, decimal amount, string currency = "usd");
         public Task<string> CreateCustomer(string email, string name);
         public  Task<decimal> GetPlatformBalance();
-        public  Task<string> SimulateInvestment(string investorCustomerId, string ideaOwnerAccountId, decimal amount);
-
+        public  Task<string> SimulateInvestmentToAdmin(string investorCustomerId, string AdminConnectedAccountId, double  amount);
+        public Task<string> SimulateInvestmentFromAdmin(string AdminCustomerId,string IdeaOwnerAccountId,double amount);
         public Task<bool> CloseConnectedAccountAsync(string accountId);
-        public Task<string> TransferThroughAdminAsync(string investorAccountId, string ideaOwnerAccountId, decimal totalProfit);
-
+        public Task<decimal> GetCustomerBalance(string customerId);
         public Task<string> CreateConnectedAccount(string Email,string FirstName,string LastName,string UserName,string? PostCode=null,string ?state=null,string ?city=null);
 
 
