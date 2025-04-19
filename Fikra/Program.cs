@@ -1,6 +1,8 @@
 using Fikra.Hubs;
 using Fikra.Mapper;
 using Fikra.Service;
+using Fikra.Service.Implementation;
+using Fikra.Service.Interface;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -32,6 +34,7 @@ builder.Services.JwtRegistering(builder.Configuration);
 builder.Services.RegisterEmail(builder.Configuration);
 builder.Services.RegKeyService(builder.Configuration);
 builder.Services.AutoMapReg();
+builder.Services.AddHttpClient();
 var app = builder.Build();
 
 
@@ -54,6 +57,7 @@ using (var scope = app.Services.CreateScope())
     scope.ServiceProvider.GetService<ApplicationDbContext>();
     var roleManager = scope.ServiceProvider.GetService<RoleManager<IdentityRole>>();
     var userManager=scope.ServiceProvider.GetService<UserManager<ApplicationUser>>();
+
     await IDentitySeeder.seedRoles(roleManager,userManager);
 }
 app.UseStaticFiles(new StaticFileOptions

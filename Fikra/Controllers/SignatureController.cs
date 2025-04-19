@@ -7,8 +7,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Paddings;
 using SparkLink.Models.Identity;
 using SparkLink.Service.Interface;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Fikra.Controllers
 {
@@ -73,6 +76,24 @@ namespace Fikra.Controllers
 
 
 
+        }
+        [HttpGet]
+        [Route("TestDecryption")]
+        public async Task<IActionResult> TestDecryption()
+        {
+            string original = "Secret Message";
+
+            // Encrypt first
+            var encrypted = _IrsaService.EncryptData(original);
+
+            // Then decrypt
+            var decrypted = _IrsaService.DecryptData(encrypted);
+
+            if (decrypted.Equals(original))
+            {
+                return Ok("Successfully");
+            }
+            return BadRequest("Not Good");
         }
     }
 }

@@ -29,6 +29,7 @@ namespace Fikra.Service.Implementation
             _signatureRepo = signatureRepo;
             _userManager = UserManager;
             _contractRepo = contractRepo;
+            _configuration = configuration;
         }
 
         public async Task<string> GenerateContract(string ideaOwnerName, string investorName, double budget, DateTime date, string IdeaownerSignature, string investorSignature, byte[] logoBytes)
@@ -117,8 +118,8 @@ namespace Fikra.Service.Implementation
                     page.Content().Column(col =>
                     {
                         col.Item().Text($"Date: {date:MMMM dd, yyyy}").AlignRight();
-                        col.Item().Text($"Idea Owner: {firstUserFullName}").FontSize(12);
-                        col.Item().Text($"Investor: {secondUserFullName}").FontSize(12);
+                        col.Item().Text($"Idea Owner: {firstPeerNameToCheck.UserName}").FontSize(12);
+                        col.Item().Text($"Investor: {secondPeerNametoCheck.UserName}").FontSize(12);
                         col.Item().Text($"Budget: ${budget:N2}").FontSize(12);
 
                         col.Item().PaddingVertical(10);
@@ -140,13 +141,13 @@ namespace Fikra.Service.Implementation
                             row.RelativeItem().Column(column =>
                             {
                                 column.Item().Text("Idea Owner Signature:").SemiBold();
-                                column.Item().Text(IdeaownerSignature).FontSize(12).Italic();
+                                column.Item().Text(firstUserFullName).FontSize(12).Italic();
                             });
 
                             row.RelativeItem().Column(column =>
                             {
                                 column.Item().Text("Investor Signature:").SemiBold();
-                                column.Item().Text(investorSignature).FontSize(12).Italic();
+                                column.Item().Text(secondUserFullName).FontSize(12).Italic();
                             });
                         });
                     });

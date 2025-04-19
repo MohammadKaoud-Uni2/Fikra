@@ -63,6 +63,9 @@ namespace SparkLink.Data
         public DbSet<Signature> Signatures { get; set; }
         public DbSet<Contract> Contracts { get; set; }
         public DbSet<Request> Requests { get; set; }
+        public DbSet<Idea> Ideas { get; set; }
+        public DbSet<IdeaRating>IdeaRatings { get; set; }
+        public DbSet<Message>Messages { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
 
         public DbSet<StripeCustomer> StripeCustomers { get; set; }

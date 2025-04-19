@@ -15,6 +15,7 @@ namespace SparkLink.Models.Identity
             contracts=new HashSet<Contract>();
             Requests = new HashSet<Request>();
             transactions=new HashSet<Transaction>();
+            Ideas=new HashSet<Idea>();
         }
         [Required]
         public string FirstName { get; set; }
@@ -37,6 +38,7 @@ namespace SparkLink.Models.Identity
         public ICollection<Request>Requests { get; set; }
         public Signature signature { get; set; }
         public ICollection<Transaction> transactions { get; set; }
+        public ICollection<Idea>Ideas { get; set; }
 
 
     }

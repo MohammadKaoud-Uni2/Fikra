@@ -38,6 +38,12 @@ namespace Fikra.Service.Implementation
             byte[] signatureBytes = Convert.FromBase64String(signature);
             return _rsa.VerifyData(dataBytes, signatureBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         }
+        public string EncryptData(string data)
+        {
+            byte[] dataBytes = Encoding.UTF8.GetBytes(data);
+            byte[] encryptedBytes = _rsa.Encrypt(dataBytes, RSAEncryptionPadding.Pkcs1);
+            return Convert.ToBase64String(encryptedBytes);
+        }
         public string DecryptData(string encryptedData)
         {
             byte[] encryptedBytes = Convert.FromBase64String(encryptedData);
