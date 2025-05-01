@@ -22,8 +22,12 @@ namespace Fikra.Controllers
         private readonly IIdentityServices _IdentityService;
         private readonly IMapper _mapper;
         private readonly IPdfService _PdfService;
-        private readonly IHubContext<ContractHub>_hubContext;   
-        public ContractController(IContractRepo contractRepo,IMapper mapper,IIdentityServices identityServices,IPdfService pdfService,IHubContext<ContractHub> hubContext,UserManager<ApplicationUser>userManager)
+        private readonly IHubContext<ContractHub>_hubContext;
+        private readonly IStripeCustomer _stripeCustomerRepo;
+        private readonly IStripeAccountsRepo _stripeAccountsRepo;
+
+        private readonly ITransictionRepo _transictionRepo;
+        public ContractController(IContractRepo contractRepo,IMapper mapper,IIdentityServices identityServices,IPdfService pdfService,IHubContext<ContractHub> hubContext,UserManager<ApplicationUser>userManager,IStripeCustomer stripeCustomer,IStripeAccountsRepo stripeAccountsRepo,ITransictionRepo transictionRepo)
         {
             _contractRepo = contractRepo;
             _mapper = mapper;
@@ -31,6 +35,9 @@ namespace Fikra.Controllers
             _PdfService=pdfService;
             _userManager= userManager;
             _hubContext = hubContext;
+            _stripeCustomerRepo= stripeCustomer;
+            _stripeAccountsRepo= stripeAccountsRepo;
+           _transictionRepo= transictionRepo;
         }
 
         [HttpGet]
@@ -55,21 +62,21 @@ namespace Fikra.Controllers
             if (ModelState.IsValid) {
                 string contractPdfUrl = "";
                 var logoimage = await _PdfService.ReciveImage();
-                var firstUserName=await _IdentityService.GetCurrentUserName();
+                var firstUserName= generateContractDto.IdeaOwnerName;
                 var firstUser =await  _userManager.FindByNameAsync(firstUserName);
                 var firstUserRoles = await _userManager.GetRolesAsync(firstUser);
-                var secondUser=await _userManager.FindByNameAsync(generateContractDto.SecondUserName);
+                var secondUser=await _userManager.FindByNameAsync(generateContractDto.InvestorName);
                 if (firstUserRoles.Contains("IdeaOwner"))
                 {
-                    contractPdfUrl = await _PdfService.GenerateContract(firstUserName, generateContractDto.SecondUserName, generateContractDto.Budget, DateTime.Now, generateContractDto.IdeaOwnerSignature, generateContractDto
-                       .InvestorSignature, logoimage);
+                    contractPdfUrl = await _PdfService.GenerateContract(firstUserName, generateContractDto.InvestorName, generateContractDto.Budget, DateTime.Now, generateContractDto.IdeaOwnerSignature, generateContractDto
+                       .InvestorSignature, logoimage,generateContractDto.IdeaTitle);
 
 
                 }
                 else
                 {
-                    contractPdfUrl = await _PdfService.GenerateContract(generateContractDto.SecondUserName, firstUserName, generateContractDto.Budget, DateTime.Now, generateContractDto.IdeaOwnerSignature, generateContractDto
-                          .InvestorSignature, logoimage);
+                    contractPdfUrl = await _PdfService.GenerateContract(generateContractDto.InvestorName, firstUserName, generateContractDto.Budget, DateTime.Now, generateContractDto.IdeaOwnerSignature, generateContractDto
+                          .InvestorSignature, logoimage,generateContractDto.IdeaTitle);
                 }
                 if (contractPdfUrl.StartsWith("ht"))
                 {

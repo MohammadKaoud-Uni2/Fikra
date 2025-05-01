@@ -109,7 +109,7 @@ namespace Fikra.Controllers
 
                         NewUser.EmailConfirmed = true;
                         await _userManager.UpdateAsync(NewUser);
-                        return Ok("User Have Been Registered Successfully check your Email Address");
+                        return Ok();
                     }
                     return BadRequest("User Have Been Registered But There Was A problem While Sending The Email");
                 }
@@ -140,7 +140,7 @@ namespace Fikra.Controllers
                     };
                     if (response != null)
                     {
-                       var emailSendingResult = await _emailService.SendEmail(user.Email, "Welcome Prince", "Say Hello from our Company ");
+                      // var emailSendingResult = await _emailService.SendEmail(user.Email, "Welcome Prince", "Say Hello from our Company ");
 
                         return Ok(response);
                     }

@@ -14,7 +14,13 @@ namespace Fikra.Models.Dto
 
         public string IdeaOwnerSignature { get; set; }
         public string InvestorSignature { get; set; }
-        public string SecondUserName {  get; set; }
+        public string InvestorName {  get; set; }
+
+        public string IdeaOwnerName { get; set; }
+        public string IdeaTitle { get; set; }
+        [Compare("IdeaTitle", ErrorMessage = "not The Same for The Another Side")]
+
+        public string IdeaTitleConfirmation { get; set; }
 
     }
 }

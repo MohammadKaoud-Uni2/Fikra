@@ -17,7 +17,6 @@ namespace Fikra.Models
         public CalculatedInvestment CostEstimation { get; set; }
         public RevenueProjection revenueProjection { get; set; }
 
-        public InfrastructureCostAnalysis InfrastructureCostEstimate { get; set; }
         public SalaryData salaryData { get; set; }
         public int initWorkingMonthDevelopment { get; set; }
         public int FrontEndDevelopers { get; set; }
@@ -73,7 +72,7 @@ namespace Fikra.Models
     public class SWOTFactor
     {
         public string Description { get; set; }
-        public double Probability { get; set; } // 0-1
+
 
     }
 

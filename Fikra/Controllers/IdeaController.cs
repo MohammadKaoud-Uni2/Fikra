@@ -1,13 +1,19 @@
 ﻿using AutoMapper;
 using Fikra.Models;
+using Fikra.Models.Dto;
 using Fikra.Service.Implementation;
 using Fikra.Service.Interface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 using OpenAI;
 using Org.BouncyCastle.Crypto.Digests;
 using SparkLink.Models.Identity;
+using SparkLink.Service.Interface;
 using Stripe;
 using System.Diagnostics.Metrics;
 using static QuestPDF.Helpers.Colors;
@@ -22,13 +28,15 @@ namespace Fikra.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IIdeaService _IdeaService;
         private readonly IMapper _mapper;
-       
-     
-        public IdeaController(UserManager<ApplicationUser>userManager,IIdeaService ideaService,IMapper mapper)
+        private readonly IIdentityServices _identityServices;
+        private readonly IIdeaRating _IdeaRating;
+        public IdeaController(UserManager<ApplicationUser> userManager, IIdeaService ideaService, IMapper mapper, IIdentityServices identityServices,IIdeaRating ideaRating)
         {
             _userManager = userManager;
-           _IdeaService = ideaService;
-           _mapper = mapper;
+            _IdeaService = ideaService;
+            _mapper = mapper;
+            _identityServices = identityServices;
+            _IdeaRating = ideaRating;
 
         }
         //[HttpPost]
@@ -217,35 +225,33 @@ namespace Fikra.Controllers
             //        };
 
 
-            var fitapp = new Idea
-            {
-                Title = "DailyFit - Personalized Fitness Tracker",
-                ProblemStatement = "Many people fail to maintain fitness goals due to lack of personalized tracking.",
-                ShortDescription = "Mobile app for personalized fitness plans, tracking steps, calories, heart rate, with AI recommendations.",
-                Category = "Fitness",
-                TargetAudience = "General public (18-45 years old)",
-                CompetitiveAdvantage = "Uses AI to auto-adjust plans based on daily behavior",
-                Features = new List<string> { "Step counter", "Calorie tracker", "Heart monitor integration", "AI fitness plans" },
-                Country = "United States",
-                ExpectedUserCount = 30000,
-                EstimatedMonthlyRevenuePerUser = 6,
-                RealisticConversionRate = 15,
-                RetentionMonths = 18,
-                Tools = new List<string> { "analytics", "notifications", "ci/cd" },
-                RequiresRealTimeFeatures = true,
-                RequiresMobileApp = true,
-                RequiresDevOpsSetup = false,
-                FrontendComplexity = "Medium",
-                SecurityCriticalLevel = "Normal",
-                DeploymentFrequency = "Bi-Weekly"
-            };
+            //var fitapp = new Idea
+            //{
+            //    Title = "DailyFit - Personalized Fitness Tracker",
+            //    ProblemStatement = "Many people fail to maintain fitness goals due to lack of personalized tracking.",
+            //    Category = "Fitness",
+            //    TargetAudience = "General public (18-45 years old)",
+            //    CompetitiveAdvantage = "Uses AI to auto-adjust plans based on daily behavior",
+            //    Features = new List<string> { "Step counter", "Calorie tracker", "Heart monitor integration", "AI fitness plans" },
+            //    Country = "Syria",
+            //    ExpectedUserCount = 30000,
+            //    EstimatedMonthlyRevenuePerUser = 6,
+            //    RealisticConversionRate = 15,
+            //    RetentionMonths = 18,
+            //    Tools = new List<string> { "analytics", "notifications", "ci/cd" },
+            //    RequiresRealTimeFeatures = true,
+
+            //    RequiresDevOpsSetup = false,
+            //    FrontendComplexity = "Medium",
+            //    SecurityCriticalLevel = "Normal",
+            //    DeploymentFrequency = "Bi-Weekly"
+            //};
 
 
             var flashcart = new Idea
             {
                 Title = "FlashCart",
                 ProblemStatement = "Consumers miss out on limited-time deals because platforms are too slow.",
-                ShortDescription = "Mobile app focused entirely on daily flash sales and fastest checkout experience.",
                 Category = "E-commerce",
                 TargetAudience = "Price-sensitive shoppers (18-40 years old)",
                 CompetitiveAdvantage = "Ultra-fast checkout + exclusive deals",
@@ -257,7 +263,7 @@ namespace Fikra.Controllers
                 RetentionMonths = 12,
                 Tools = new List<string> { "payments", "notifications", "analytics" },
                 RequiresRealTimeFeatures = false,
-                RequiresMobileApp = true,
+
                 RequiresDevOpsSetup = false,
                 FrontendComplexity = "Simple",
                 SecurityCriticalLevel = "Normal",
@@ -267,7 +273,6 @@ namespace Fikra.Controllers
             {
                 Title = "CoinPilot",
                 ProblemStatement = "Crypto investors struggle to manage scattered assets across exchanges.",
-                ShortDescription = "Dashboard that aggregates and tracks crypto portfolios automatically.",
                 Category = "Fintech",
                 TargetAudience = "Crypto traders",
                 CompetitiveAdvantage = "Real-time syncing from major exchanges + profit/loss tracking",
@@ -279,7 +284,6 @@ namespace Fikra.Controllers
                 RetentionMonths = 10,
                 Tools = new List<string> { "api integrations", "ci/cd", "monitoring" },
                 RequiresRealTimeFeatures = true,
-                RequiresMobileApp = true,
                 RequiresDevOpsSetup = true,
                 FrontendComplexity = "Complex",
                 SecurityCriticalLevel = "Highly Sensitive",
@@ -289,19 +293,18 @@ namespace Fikra.Controllers
             {
                 Title = "EventLink",
                 ProblemStatement = "Finding and booking small events (like workshops, meetups) is messy.",
-                ShortDescription = "Simple platform for finding and booking local events, classes, and workshops.",
                 Category = "Marketplace",
                 TargetAudience = "Young adults, professionals",
                 CompetitiveAdvantage = "Better small event discovery + instant booking",
                 Features = new List<string> { "Event search", "Instant booking", "Reviews", "Payment splitting" },
                 Country = "Syria",
                 ExpectedUserCount = 12000,
-                EstimatedMonthlyRevenuePerUser = 7,
+                EstimatedMonthlyRevenuePerUser = 9,
                 RealisticConversionRate = 15,
                 RetentionMonths = 14,
                 Tools = new List<string> { "payments", "ci/cd", "monitoring" },
                 RequiresRealTimeFeatures = false,
-                RequiresMobileApp = false,
+
                 RequiresDevOpsSetup = true,
                 FrontendComplexity = "Medium",
                 SecurityCriticalLevel = "Normal",
@@ -315,12 +318,144 @@ namespace Fikra.Controllers
             return Ok(analysis);
 
 
-            
+
 
         }
-   
+        [HttpPost]
+       [Route("CreateNewIdea")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "IdeaOwner")]
+        public async Task<IActionResult> CreateIdeaPost([FromBody] AddIdeaDto ideaDto)
+        {
+           var idea=await _IdeaService.GetTableAsNoTracking().FirstOrDefaultAsync(x=>x.Title.Equals(ideaDto.Title,StringComparison.OrdinalIgnoreCase));
+            if (idea != null)
+            {
+                return BadRequest("This Idea has Been taken And Registered Before");
+            }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Model state is not valid check the fields");
+            }
+            var currentUserName = await _identityServices.GetCurrentUserName();
+            var IdeaDomainModel = _mapper.Map<Idea>(ideaDto);
+            var currentIdeaOwner = await _userManager.FindByNameAsync(currentUserName);
+            IdeaDomainModel.IdeaOwnerName = currentUserName;
+            IdeaDomainModel.IdeaOwner = currentIdeaOwner;
+            IdeaDomainModel.CreatedAt = DateTime.Now;
+            IdeaDomainModel.RatingCount = 0;
+            IdeaDomainModel.AverageRating = 0;
+            IdeaDomainModel.Confirmed = false;
+           
+            var result = await _IdeaService.AddAsync(IdeaDomainModel);
+            await _IdeaService.SaveChangesAsync();
+            return Ok();
 
 
+
+
+        }
+        
+       
+        [HttpGet]
+        [Route("GetFinanceStudy")]
+        [Authorize(AuthenticationSchemes ="Bearer",Roles ="Investor")]
+        public async Task<IActionResult> GetFinanceStudy([FromBody] GetIdeaFinanceDto getIdeaFinanceDto)
+        {
+
+            var allIdea=await _IdeaService.GetTableAsNoTracking().ToListAsync();
+            var ideaToStudy=allIdea.FirstOrDefault(x=>x.Title.Equals(getIdeaFinanceDto.Title,StringComparison.OrdinalIgnoreCase));
+            if (ideaToStudy == null)
+            {
+                return NotFound($" Idea With Title :{getIdeaFinanceDto.Title}NotFound:");
+            }
+           var analysis=await  _IdeaService.AnalyzeIdeaCompletely(ideaToStudy);
+            return Ok(analysis);
+        }
+        [HttpGet]
+        [Route("GetAllIdeas")]
+        [Authorize(AuthenticationSchemes ="Bearer",Roles ="Investor")]
+        public async Task<IActionResult> GetAllIdeas([FromQuery] string? Category, [FromQuery] string? Country )
+        {
+            IEnumerable<GetIdeaDto> ideasDto = null; 
+           
+           
+        var ideas = await _IdeaService.GetTableAsNoTracking().ToListAsync();
+            ideas=ideas.Where(x=>x.Confirmed==false).ToList();
+            if (ideas.Any())
+            {
+               ideasDto= _mapper.Map<List<GetIdeaDto>>(ideas);
+                if (Category != null)
+                {
+                    ideasDto=ideasDto.Where(x=>x.Category.Equals(Category,StringComparison.OrdinalIgnoreCase));
+                }
+                if (Country != null)
+                {
+                    ideasDto = ideasDto.Where(x => x.Country.Equals(Country,StringComparison.OrdinalIgnoreCase));
+                }
+               ideasDto= ideasDto.OrderByDescending(x => x.AverageRating);
+                return Ok(ideasDto);
+
+            }
+            return BadRequest("Failed While Fetching the Ideas From Db!");
+
+        }
+        [HttpGet]
+        [Route("GetIdeasCountRelatedToIdeaOwner")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "IdeaOwner")]
+        public async Task<IActionResult> GetIdeaCount()
+        {
+            var currentUserName = await _identityServices.GetCurrentUserName();
+            var result=await _IdeaService.GetIdeasRelatedToSpecificIdeaOwner(currentUserName);
+            if (result != null)
+            {
+                return Ok(result.Count());
+            }
+            return Ok();
+
+        }
+        [HttpPost]
+        [Route("RateIdea")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "Investor")] 
+        public async Task<IActionResult> RateIdea([FromBody] IdeaRatingDto ratingDto)
+        {
+
+            var currentUserName =await  _identityServices.GetCurrentUserName();
+            var currentUser = await _userManager.FindByNameAsync(currentUserName);
+ 
+            var ideas = await _IdeaService.GetIdeasWithRating();
+            var idea= ideas.FirstOrDefault(x=>x.Id==ratingDto.IdeaId);
+            if (idea == null)
+                return NotFound("Idea not found.");
+
+         
+           
+                var newRating = new IdeaRating
+                {
+                    IdeaId = ratingDto.IdeaId,
+                    UserId = currentUser.Id,
+                    Rating = ratingDto.Rating,
+                    RatedAt = DateTime.UtcNow
+                };
+              await _IdeaRating.AddAsync(newRating);
+      
+
+
+            idea.RatingCount++;
+        
+            var updatedRatings = await _IdeaRating.GetTableAsNoTracking().Where(x => x.IdeaId == ratingDto.IdeaId).ToListAsync();   
+
+           var sumofRatings = updatedRatings.Sum(r => r.Rating);
+            idea.AverageRating=sumofRatings/idea.RatingCount;
+
+            await _IdeaRating.SaveChangesAsync();
+            await _IdeaService.SaveChangesAsync();
+
+            return Ok( );
+        }
+        
+    }
+    public class GetIdeaFinanceDto
+    {
+        public string Title { get; set; }
     }
 }
 //total += tool.ToLower() switch

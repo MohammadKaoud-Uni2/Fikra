@@ -16,11 +16,13 @@ namespace Fikra.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IIdentityServices _identityService;
         private readonly IMapper _Mapper;
-        public UserController(UserManager<ApplicationUser>userManager,IIdentityServices identityServices,IMapper mapper)
+        private readonly IPhotoService _photoService;
+        public UserController(UserManager<ApplicationUser>userManager,IIdentityServices identityServices,IMapper mapper,IPhotoService photoService)
         {
             _userManager = userManager;
             _identityService= identityServices;
             _Mapper = mapper;
+            _photoService= photoService;
             
         }
         [HttpGet]
@@ -41,15 +43,18 @@ namespace Fikra.Controllers
         [HttpPut]
         [Route("UpdatePersonalInfo")]
         [Authorize(AuthenticationSchemes ="Bearer")]
-        public async Task<IActionResult> UpdatePersonalInformation([FromBody]UpdateUserDto updateUserDto )
+        public async Task<IActionResult> UpdatePersonalInformation([FromForm]UpdateUserDto updateUserDto, [FromForm] IFormFile? profilePicture)
         {
             var currentUsername=await _identityService.GetCurrentUserName();
            var user=await  _userManager.FindByNameAsync(currentUsername);
             user.Email=updateUserDto.Email;
-            user.PhoneNumber=updateUserDto.PhoneNumber;
             user.UserName=updateUserDto.UserName;
             user.LinkedinUrl=updateUserDto.LinkedInUrl;
-            user.ImageProfileUrl=updateUserDto.ImageProfileUrl;
+            if (profilePicture != null)
+            {
+                var profilePictureUrl = await _photoService.UploadPhoto(profilePicture);
+                user.ImageProfileUrl =profilePictureUrl;
+            }
             user.CompanyName=updateUserDto.CompanyName;
             var result = await _userManager.UpdateAsync(user);
             

@@ -20,8 +20,13 @@ namespace Fikra.Service.Implementation
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IContractRepo _contractRepo;
         private readonly IConfiguration _configuration;
+        private readonly IStripeService _stripeService;
+        private readonly IStripeCustomer _stripeCustomerRepo;
+        private readonly IStripeAccountsRepo _stripeAccountsRepo;
+        private readonly IIdeaService _IdeaService; 
 
-        public PdfService(IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor, IRSAService rsaService,ISignatureRepo signatureRepo,UserManager<ApplicationUser>UserManager,IContractRepo contractRepo,IConfiguration configuration)
+        private readonly ITransictionRepo _transictionRepo;
+        public PdfService(IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor, IRSAService rsaService,ISignatureRepo signatureRepo,UserManager<ApplicationUser>UserManager,IContractRepo contractRepo,IConfiguration configuration,IStripeService stripeService,IStripeAccountsRepo stripeAccountsRepo,IStripeCustomer stripeCustomer,ITransictionRepo transictionRepo,IIdeaService ideaService)
         {
             _webHostEnvironment = webHostEnvironment;
             _httpContextAccessor = httpContextAccessor;
@@ -30,10 +35,15 @@ namespace Fikra.Service.Implementation
             _userManager = UserManager;
             _contractRepo = contractRepo;
             _configuration = configuration;
+            _stripeService = stripeService;
+            _stripeCustomerRepo = stripeCustomer;
+            _stripeAccountsRepo = stripeAccountsRepo;
+            _transictionRepo = transictionRepo;
+            _IdeaService= ideaService;
         }
 
-        public async Task<string> GenerateContract(string ideaOwnerName, string investorName, double budget, DateTime date, string IdeaownerSignature, string investorSignature, byte[] logoBytes)
-        {
+        public async Task<string> GenerateContract(string ideaOwnerName, string investorName, double budget, DateTime date, string IdeaownerSignature, string investorSignature, byte[] logoBytes,string ideaTitle)
+        { 
             string contractsPath = Path.Combine(_webHostEnvironment.ContentRootPath, "contracts");
             if (!Directory.Exists(contractsPath))
                 Directory.CreateDirectory(contractsPath);
@@ -113,6 +123,10 @@ namespace Fikra.Service.Implementation
                         col.Item().Container().Width(80).Height(80).Image(logoBytes).WithCompressionQuality(ImageCompressionQuality.High);
                         col.Item().Text("Fikra").FontSize(18).SemiBold();
                         col.Item().Text("Official Contract Document").FontSize(14).Italic().FontColor(Colors.Grey.Darken1);
+                        col.Item().PaddingTop(10).Text(ideaTitle)
+       .FontSize(16).Bold().AlignCenter();
+
+                        col.Item().LineHorizontal(1).LineColor(Colors.Black);
                     });
 
                     page.Content().Column(col =>
@@ -172,7 +186,95 @@ namespace Fikra.Service.Implementation
                 Budget = budget,
                 IdeaOwnerpercentage = 0.0,
             };
-           await  _contractRepo.AddAsync(contract);
+            var stripeCustomersaccounts =  _stripeCustomerRepo.GetTableAsNoTracking().Include(x => x.ApplicationUser);
+            var checkInvestor = await stripeCustomersaccounts.FirstOrDefaultAsync(x => x.ApplicationUser.UserName == investorName);
+            if (checkInvestor == null)
+            {
+                var result = await _stripeService.CreateCustomer(secondPeerNametoCheck.Email, secondPeerNametoCheck.UserName);
+                var newCustomerAccount = new StripeCustomer()
+                {
+                    ApplicationUser = secondPeerNametoCheck,
+                    ApplicationUserId =secondPeerNametoCheck.Id,
+                    CreatedAt = DateTime.Now,
+                    StripeCustomerId = result,
+                };
+                await _stripeCustomerRepo.AddAsync(newCustomerAccount);
+                await _stripeCustomerRepo.SaveChangesAsync();
+            }
+
+
+            // start fixing
+
+            //start adminSection
+            // var Admin = await _userManager.Users.FirstOrDefaultAsync(x => x.UserName == "KaoudAdmin");
+
+
+
+            //end AdminSection
+            // start for IDeaOwnerSection
+            var stripeAccounts =  _stripeAccountsRepo.GetTableAsNoTracking().Include(x => x.ApplicationUser);
+            var checkIdeaOwner=stripeAccounts.FirstOrDefaultAsync(x=>x.ApplicationUser.UserName==firstPeerNameToCheck.UserName);
+            if (checkIdeaOwner == null)
+            {
+               
+
+                var stripeAccountId = await _stripeService.CreateConnectedAccount(firstPeerNameToCheck.Email, firstPeerNameToCheck.FirstName, firstPeerNameToCheck.LastName, firstPeerNameToCheck.UserName, PostCode: null, city: null, state: null);
+
+
+                var stripeAccount = new StripeAccount
+                {
+                    ApplicationUserId = firstPeerNameToCheck.Id,
+                    StripeAccountId = stripeAccountId,
+                    BusinessType = "Personal",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _stripeAccountsRepo.AddAsync(stripeAccount);
+                await _stripeAccountsRepo.SaveChangesAsync();
+            }
+            var getTableofCustomersAfter =await  _stripeCustomerRepo.GetTableAsNoTracking().Include(x => x.ApplicationUser).ToListAsync();
+            var getInvestorCustomerAccount = getTableofCustomersAfter.FirstOrDefault(x => x.ApplicationUserId == secondPeerNametoCheck.Id);
+            var getTablesofAccountsAfter=await _stripeAccountsRepo.GetTableAsNoTracking().Include(x=>x.ApplicationUser).ToListAsync();
+            var getIdeaOwnerConnectedAccount =  getTablesofAccountsAfter.FirstOrDefault(x => x.ApplicationUserId == firstPeerNameToCheck.Id);
+
+            try
+            {
+                var result = await _stripeService.SimulateInvestmentToAdmin(getInvestorCustomerAccount.StripeCustomerId, getIdeaOwnerConnectedAccount.StripeAccountId, budget);
+                var newTransaction = new Transaction()
+                {
+                    Amount = budget,
+                    CreatedAt = DateTime.UtcNow,
+                    Status = "Pending",
+                    StripePaymentIntentId = result,
+                    InvestorId = secondPeerNametoCheck.Id,
+                    IdeaOwnerId = firstPeerNameToCheck.Id,
+                };
+                await _transictionRepo.AddAsync(newTransaction);
+
+                await _transictionRepo.SaveChangesAsync();
+
+               
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+
+
+
+            var IdeatoFind =await  _IdeaService.GetTableAsNoTracking().FirstOrDefaultAsync(x=>x.Title==ideaTitle);
+            IdeatoFind.Confirmed=true;
+           await  _IdeaService.UpdateAsync(IdeatoFind);
+            await _IdeaService.SaveChangesAsync();
+
+
+
+
+
+
+
+            await  _contractRepo.AddAsync(contract);
             await _contractRepo.SaveChangesAsync();
 
             

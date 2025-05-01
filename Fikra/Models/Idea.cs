@@ -14,18 +14,23 @@ namespace Fikra.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public string Id { get; set; }
         public ApplicationUser IdeaOwner { get; set; }
-        public string IdeaOwnerId { get; set; }
+        public string IdeaOwnerId {get; set; }
+        public string IdeaOwnerName { get; set; }
         public string Title { get; set; }
-        public string ShortDescription { get; set; }
-        public string ?CompetitiveAdvantage {  get; set; }
-        public string ?ProblemStatement { get; set; }
-        public decimal ? InitialInvestment { get; set; }
+       
+        public string CompetitiveAdvantage {  get; set; }
+        public string ProblemStatement { get; set; }
+
         public string Category { get; set; }
         public string TargetAudience { get; set; } 
         public List<string>Tools {  get; set; }
         public int ExpectedUserCount { get; set; }
-        public decimal ?EstimatedBudget { get; set; }
+   
         public List<string>Features { get; set; }
+        public bool BigServerNeeded { get; set; }
+
+        public bool Confirmed {  get; set; }
+        public bool HaveBigFiles { get; set; }
 
         [NotMapped]
         public CalculatedInvestment Investment { get; set; }
@@ -41,9 +46,10 @@ namespace Fikra.Models
         public virtual ICollection<IdeaRating>? Ratings { get; set; }
      
         public bool RequiresRealTimeFeatures { get; set; }
-        public bool RequiresMobileApp { get; set; }
+        public string ?ShortDescription { get; set; }
+        
         public bool RequiresDevOpsSetup { get; set; }
-        public string FrontendComplexity { get; set; } // Simple/Medium/Complex // Small/Medium/Big Data
+        public string FrontendComplexity { get; set; } // Simple/Medium/Complex 
         public string SecurityCriticalLevel { get; set; } // Normal/Sensitive/Highly Sensitive
         public string DeploymentFrequency { get; set; }
 

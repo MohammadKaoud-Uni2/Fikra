@@ -11,7 +11,9 @@ namespace Fikra.Mapper
         {
             CreateMap<Contract, GetContractDto>().ForMember(x => x.InvestorName, opt => opt.MapFrom(x => x.Investor.UserName)).ForMember(x => x.IdeaOwnerName, opt => opt.MapFrom(x => x.IdeaOwner.UserName));
             CreateMap<Request, GetRequestDto>();
+            CreateMap<AddIdeaDto, Idea>();
             CreateMap<ApplicationUser,GetProfileDto>();
+            CreateMap<Idea,GetIdeaDto>();
 
         }
 

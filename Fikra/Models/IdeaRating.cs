@@ -11,7 +11,7 @@ namespace Fikra.Models
         public virtual Idea Idea { get; set; }
         public string  IdeaId { get; set; }
         public string UserId { get; set; } 
-        public int Rating { get; set; }
+        public double?  Rating { get; set; }
         public DateTime RatedAt { get; set; }
         
 

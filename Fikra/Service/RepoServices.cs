@@ -32,6 +32,7 @@ namespace SparkLink.Service
             services.AddScoped<IIdeaService, IdeaService>();
             services.AddScoped<IMessageRepo, MessageRepo>();
             services.AddScoped<IRequestRepo,RequestRepo>();
+            services.AddScoped<IIdeaRating,IdeaRatingService>();
 
             return services;    
         }

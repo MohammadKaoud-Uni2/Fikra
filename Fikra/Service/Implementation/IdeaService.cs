@@ -2,15 +2,18 @@
 using System.Net.Http.Json;
 using System.Security.Cryptography.Xml;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Fikra.Models;
 using Fikra.Service.Interface;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Org.BouncyCastle.Crypto;
 using SparkLink.Data;
 using SparkLink.Service.Implementation;
+using Stripe;
 using static Fikra.Service.Implementation.IdeaService;
 
 namespace Fikra.Service.Implementation
@@ -25,7 +28,7 @@ namespace Fikra.Service.Implementation
         {
             _context = context;
             _httpClient = new HttpClient();
-            _openRouterApiKey = "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";
+            _openRouterApiKey = "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";
 
 
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_openRouterApiKey}");
@@ -83,19 +86,19 @@ namespace Fikra.Service.Implementation
             string devOpsLevel = "Mid";
 
 
-            if (idea.RequiresRealTimeFeatures || idea.SecurityCriticalLevel == "Highly Sensitive")
+            if (idea.RequiresRealTimeFeatures || idea.SecurityCriticalLevel.Equals("Highly Sensitive",StringComparison.OrdinalIgnoreCase))
                 backendLevel = "Senior";
 
           
-            if (idea.FrontendComplexity == "Complex")
+            if (idea.FrontendComplexity.Equals("Complex",StringComparison.OrdinalIgnoreCase))
                 frontendLevel = "Senior";
             else if (idea.FrontendComplexity == "Simple")
                 frontendLevel = "Junior";
 
             
-            if (idea.RequiresDevOpsSetup && idea.DeploymentFrequency == "Daily")
+            if (idea.RequiresDevOpsSetup && idea.DeploymentFrequency.Equals("Daily",StringComparison.OrdinalIgnoreCase))
                 devOpsLevel = "Senior";
-            else if (idea.RequiresDevOpsSetup && idea.DeploymentFrequency == "Weekly")
+            else if (idea.RequiresDevOpsSetup && idea.DeploymentFrequency.Equals("Weekly",StringComparison.OrdinalIgnoreCase))
                 devOpsLevel = "Mid";
             else
                 devOpsLevel = "Junior";
@@ -126,6 +129,7 @@ namespace Fikra.Service.Implementation
                 var successProbability = CalculateRealisticSuccessProbability(
                     financialAnalysis);
                 var swotAnalysis = await  GenerateCompleteSWOTAnalysis(idea, marketData);
+
                 var MonthEstimator = SmartDevelopmentMonthEstimator.Estimate(idea);
                 var DeveloperEstimator=TeamSizeEstimator.Estimate(idea);
                 return new FullProjectAnalysis
@@ -137,7 +141,7 @@ namespace Fikra.Service.Implementation
                     technologyRecommendation = investmentNeeds.Item2,
                     CostEstimation=investmentNeeds.Item1,
                     revenueProjection = revenueProjection,
-                    InfrastructureCostEstimate = this.infrastructureCostAnalysis,
+          
                     GeneratedAt = DateTime.UtcNow,
                     salaryData=investmentNeeds.Item1.SalaryData,
                     initWorkingMonthDevelopment=MonthEstimator.months,
@@ -147,6 +151,7 @@ namespace Fikra.Service.Implementation
                     DevOps=DeveloperEstimator.devops,
                 };
             }
+
             catch (Exception ex)
             {
                 return new FullProjectAnalysis
@@ -172,30 +177,46 @@ namespace Fikra.Service.Implementation
 
         private async Task<TechnologyRecommendation> GetTechnologyRecommendation(Idea idea,string backendLevel,string frontendLevel,string DevopsLevel)
         {
-  
 
-            var prompt = $@"Analyze this software project and recommend appropriate technologies:
-            Project Title: {idea.Title}
-            Problem: {idea.ProblemStatement}
-            Expected Users: {idea.ExpectedUserCount}
-            Key Features: {string.Join(", ", idea.Features)}
-            Category :{idea.Category}
-            Budget: {idea.InitialInvestment}
-            Tools:{idea.Tools}
-            CompetitiveAdvantage:{idea.CompetitiveAdvantage}
-            ConversionRate:{idea.RealisticConversionRate}
-            backendDeveloperLevel:{backendLevel}
-            frontendDeveloperLevel:{frontendLevel}
-            DevOpsLevel:{DevopsLevel}
-             
-            
 
-            Return JSON response with:
+            var prompt = $@"
+            Analyze this software project and recommend the most suitable technology stack.
+
+            Project Information:
+            - Project Title: {idea.Title}
+            - Problem: {idea.ProblemStatement}
+            - Expected Users: {idea.ExpectedUserCount}
+            - Key Features: {string.Join(", ", idea.Features ?? new List<string>())}
+            - Category: {idea.Category}
+            - Existing Tools: {string.Join(", ", idea.Tools ?? new List<string>())}
+            - Competitive Advantage: {idea.CompetitiveAdvantage}
+            - Estimated Conversion Rate: {idea.RealisticConversionRate}
+            - Backend Developer Level: {backendLevel}
+            - Frontend Developer Level: {frontendLevel}
+            - DevOps Level: {DevopsLevel}
+            - Security Critical Level: {idea.SecurityCriticalLevel}
+            - Requires Real-Time Features: {idea.RequiresRealTimeFeatures}
+
+            ⚠️ STRICT INSTRUCTIONS:
+            - Choose technologies based on project scalability needs, real-time features, security level, and complexity.
+            - Recommend only modern, production-grade technologies (e.g., Node.js, Django, Spring Boot, ASP.NET Core, React, Next.js, Angular, Vue.js, Flutter).
+            - Backend must support {idea.ExpectedUserCount} users or more.
+            - If real-time is required, suggest real-time capable backend (e.g., Node.js, Elixir, .NET SignalR).
+            - If highly sensitive security is required, suggest mature frameworks (e.g., Java, ASP.NET Core).
+            - If it's mobile-first, suggest mobile technologies (e.g., Flutter, React Native).
+            - Focus on practical, scalable tech stacks — no random technologies.
+
+            IMPORTANT FORMAT:
+            - The field ""RecommendedTechnology"" must be a SINGLE TEXT STRING, summarizing backend, frontend, database.
+            - NO nested JSON or objects inside RecommendedTechnology.
+            - Return ONLY pure JSON in this structure, NO extra text, NO markdown:
+
             {{
-                ""RecommendedTechnology"": ""..."",
-                ""ComplexityLevel"": ""Low/Medium/High"",
-                ""Reasoning"": ""...""
-            }}";
+              ""RecommendedTechnology"": ""Backend: ..., Frontend: ..., Database: ..."", 
+              ""Reasoning"": ""...""
+            }}
+            ";
+
 
             var response = await GetAIJsonResponse<TechnologyRecommendation>(prompt);
             return response;
@@ -256,28 +277,28 @@ namespace Fikra.Service.Implementation
                     {
                         Description = s.Description,
 
-                        Probability = s.Probability
+                     
                     }).ToList(),
 
                 Weaknesses = aiSwot.Weaknesses
                     .Select(w => new SWOTFactor
                     {
                         Description = w.Description,
-                        Probability = w.Probability
+                  
                     }).ToList(),
 
                 Opportunities = aiSwot.Opportunities
                     .Select(o => new SWOTFactor
                     {
                         Description = o.Description,
-                        Probability = o.Probability
+        
                     }).ToList(),
 
                 Threats = aiSwot.Threats
                     .Select(t => new SWOTFactor
                     {
                         Description = t.Description,
-                        Probability = t.Probability
+          
                     }).ToList()
             };
         }
@@ -288,10 +309,10 @@ namespace Fikra.Service.Implementation
             Return ONLY valid JSON. No extra text, no markdown, just a JSON object exactly matching this schema:
 
             {{
-              ""Strengths"": [{{""Description"": ""..."", ""Probability"": 0-1}}],
-              ""Weaknesses"": [{{""Description"": ""..."", ""Probability"": 0-1}}],
-              ""Opportunities"": [{{""Description"": ""..."", ""Probability"": 0-1}}],
-              ""Threats"": [{{""Description"": ""..."", ""Probability"": 0-1}}]
+              ""Strengths"": [{{""Description"": ""...""}}],
+              ""Weaknesses"": [{{""Description"": ""...""}}],
+              ""Opportunities"": [{{""Description"": ""...""}}],
+              ""Threats"": [{{""Description"": ""...""}}]
             }}
 
             Analyze the following business idea and return the SWOT in the format above:
@@ -450,23 +471,7 @@ namespace Fikra.Service.Implementation
 
 
       
-            var scopePrompt = $@"
-            Analyze this software project to determine resource requirements:
-            Project: {idea.Title}
-            Category: {idea.Category}
-            ProbmlemStatment: {idea.ProblemStatement} 
-            Features: {string.Join(", ", idea.Features ?? new List<string>())}
-            Target Users: {idea.TargetAudience}
-           
-
-            Return JSON with:
-            {{
-                ""developmentComplexity"": ""low/medium/high"",
-                ""infrastructureNeeds"": [""server"", ""database"", ...],
-      
-            }}";
-
-            var scopeAnalysis = await GetAIJsonResponse<ScopeAnalysis>(scopePrompt);
+  
             var DeveloperLevels = DetectDeveloperLevels(idea);
 
 
@@ -477,14 +482,14 @@ namespace Fikra.Service.Implementation
             var DeveloperNumberNeeded=TeamSizeEstimator.Estimate(idea);
             var salaryData = await GetDeveloperSalaries(techRecommendation.Reasoning, idea.Country, DeveloperLevels.backendLevel, DeveloperLevels.frontendLevel, DeveloperLevels.devOpsLevel);
             var calculateTeamcost = CalculateTeamCosts(DeveloperNumberNeeded.backend,DeveloperNumberNeeded.frontend,DeveloperNumberNeeded.devops,DeveloperNumberNeeded.qa, salaryData, DevelopmentMonth.months);
-            var infrastructre = await CalculateInfrastructureCost(scopeAnalysis, idea);
+            var infrastructre = await CalculateInfrastructureCost( idea);
 
 
 
             var costs = new CalculatedInvestment
             {
                 Development = calculateTeamcost.TotalCost,
-                Infrastructure = infrastructre.totalMonthly * 36,
+                Infrastructure = infrastructre.TotalMonthly * 36,
                 Tooling = CalculateToolingCost(idea.Tools),
                 Marketing = MarketingCost(idea.Category, idea.TargetAudience, idea.ExpectedUserCount, idea.RealisticConversionRate),
 
@@ -498,10 +503,14 @@ namespace Fikra.Service.Implementation
             costs.baseCost = costs.Development + costs.Infrastructure + costs.Tooling + costs.Marketing;
 
             costs.Contingency =costs.baseCost * 0.25m;
-            costs.MaintenanceCost = (costs.TeamCostBreakdown.TotalCost * 0.18m * 3) + (infrastructre.totalMonthly * 36);
+            costs.MaintenanceCost = (costs.TeamCostBreakdown.TotalCost * 0.18m * 3) + (infrastructre.TotalMonthly * 36);
+   
+
+
 
             return (costs,techRecommendation);
         }
+      
         private decimal CalculateToolingCost(List<string> tools)
         {
             decimal total = 0;
@@ -522,7 +531,7 @@ namespace Fikra.Service.Implementation
                 };
             }
 
-            return total * 12; // Annual cost
+            return total * 12; 
         }
 
 
@@ -577,17 +586,15 @@ namespace Fikra.Service.Implementation
                 _ => 28m                // General average fallback
             };
 
-            // Adjust CAC for enterprise-focused projects (usually higher acquisition cost)
+       
             if (targetAudience.ToLower().Contains("enterprise"))
                 cac *= 1.5m;
 
-            // Calculate the number of users expected to convert
             int payingUsers = (int)(expectedUsers * (conversionRate / 100.0));
 
-            // Total direct acquisition cost
+       
             decimal acquisitionCost = payingUsers * cac;
 
-            // Add 20% for brand awareness, remarketing, and retention strategies
             decimal retentionMarketing = acquisitionCost * 0.2m;
 
             return acquisitionCost + retentionMarketing;
@@ -672,115 +679,143 @@ namespace Fikra.Service.Implementation
             public double juniors { get; set; }
         }
         public InfrastructureCostAnalysis infrastructureCostAnalysis { get; set; }
-        private async Task<InfrastructureCostAnalysis> CalculateInfrastructureCost(ScopeAnalysis scope, Idea idea)
+        private async Task<InfrastructureCostAnalysis> CalculateInfrastructureCost( Idea idea)
         {
-            var services = string.Join(", ", scope.InfrastructureNeeds);
-            var prompt = $@"
-            Estimate monthly  infrastructure costs for:
-            Services needed: {services}
-            Expected users: {idea.ExpectedUserCount}
-            Idea Title:{idea.Title}
-            Idea SecurityCriticalLevel{idea.SecurityCriticalLevel}
-            Idea RequiresRealTimeFeatures:{idea.RequiresRealTimeFeatures}
-            Idea Tools:{idea.Tools}
+           
           
-            Return JSON with:
-            {{
-                ""serverCost"": number,
-                ""databaseCost"": number,
-                ""storageCost"": number,
-                ""bandwidthCost"": number,
-                ""totalMonthly"": number
-                ""source"":string
-            }}
-            ⚠️ Important Rules:
-              - Read the Requirement from the provided Data.
-                - Fill all salary fields with realistic non-zero values.
-                - Only use real-world Prices sources (e.g., Amazon).
-                _fill the source property from where did you got the prices
-                - No extra text or markdown outside JSON.
-                "";
-";
+            var requiredServices = new List<string>
+    {
+        "Virtual Machines (Standard_B2s, Linux)",
+        "Azure SQL Database (Basic Tier)",
+        "Storage (Standard_LRS, Hot Tier)",
+        "Bandwidth (Data Transfer Out to Internet)"
+    };
 
+            var prompt = $@"
+    Retrieve ONLY the current unit prices for these Microsoft Azure services:
+    {string.Join("\n", requiredServices.Select(s => $"- {s}"))}
+     Notice that the prices are from here only :https://prices.azure.com/api/retail/prices
+    Return ONLY a valid JSON object exactly like this:
+    {{
+      ""infrastructureItems"": [
+        {{
+          ""serviceName"": ""Virtual Machines"",
+          ""unitPrice"": number,
+          ""unitMeasure"": ""per hour""
+        }},
+        {{
+          ""serviceName"": ""Storage"",
+          ""unitPrice"": number,
+          ""unitMeasure"": ""per GB per month""
+        }},
+        {{
+          ""serviceName"": ""Bandwidth"",
+          ""unitPrice"": number,
+          ""unitMeasure"": ""per GB""
+        }},
+        {{
+          ""serviceName"": ""Azure SQL Database"",
+          ""unitPrice"": number,
+          ""unitMeasure"": ""per month""
+        }}
+      ]
+    }}";
 
             var costs = await GetAIJsonResponse<InfrastructureCostAnalysis>(prompt);
+            costs.Source = "https://prices.azure.com/api/retail/prices";
+            var vm = costs.infrastructureItems.FirstOrDefault(x => x.serviceName.Equals("Virtual Machines"));
+            var Storage = costs.infrastructureItems.FirstOrDefault(x => x.serviceName.Equals("Storage"));
+            var band = costs.infrastructureItems.FirstOrDefault(x => x.serviceName.Equals("Bandwidth"));
+            var sql = costs.infrastructureItems.FirstOrDefault(x => x.serviceName.Equals("Azure SQL Database"));
+            var total=CalculateTotalMonthlyCost(vm.unitPrice,Storage.unitPrice, band.unitPrice, sql.unitPrice,idea);
+            costs.TotalMonthly=total;
             infrastructureCostAnalysis = costs;
             return infrastructureCostAnalysis;
-           
+       
+
+      
+
         }
+        public static decimal CalculateTotalMonthlyCost(
+       decimal vmHourlyPrice,
+       decimal storagePricePerGB,
+       decimal bandwidthPricePerGB,
+       decimal sqlDbMonthlyPrice,
+       Idea idea)
+        {
+        
+            int vmCount = 1;
+            int storageGB = 500;
+            int bandwidthGB = 1000;
+
+          
+            if (idea.BigServerNeeded == true || idea.ExpectedUserCount > 10000)
+            {
+                vmCount = 2;
+            }
+
+       
+            if (idea.HaveBigFiles == true)
+            {
+                storageGB = 1000; // 1 TB
+            }
+
+           
+            if (idea.RequiresRealTimeFeatures == true)
+            {
+                bandwidthGB = 2000; 
+            }
+
+
+            decimal vmHoursPerMonth = 24 * 30; 
+            decimal vmCost = vmHourlyPrice * vmHoursPerMonth * vmCount;
+
+            decimal storageCost = storagePricePerGB * storageGB;
+
+            decimal bandwidthCost = bandwidthPricePerGB * bandwidthGB;
+
+            decimal sqlDbCost = sqlDbMonthlyPrice;
+            decimal totalMonthlyCost = vmCost + storageCost + bandwidthCost + sqlDbCost;
+
+
+            return totalMonthlyCost;
+        }
+
+
+
+
         public class InfrastructureCostAnalysis
         {
-            public int serverCost { get; set; }
-            public int databaseCost { get; set; }
-            public int storageCost { get; set; }
-            public int bandwidthCost { get; set; }
-            public int totalMonthly { get; set; }
-            public string Source    { get; set; }
+           public List<InfrastructureItem> infrastructureItems { get; set; }
+            public string Source { get; set; }
 
+            [JsonIgnore]
+            public decimal TotalMonthly {  get; set; }
         }
-
-        private string GenerateFinancialRecommendation(FinancialAnalysis financial)
+        public class InfrastructureItem
         {
-            var npv = financial.NPV;
-            var irr = financial.IRR;
-            var payback = financial.PaybackPeriodYears;
-            var roi = financial.ROI;
-            var breakEvenYear = financial.BreakEvenPointYear;
-            var discountRate = financial.DiscountRate;
+            public string serviceName { get; set; }
+            public decimal unitPrice { get; set; }
+            public string unitMeasure {  get; set; }
 
-            // 1️⃣ **Strong Buy (Exceptional Performance)**
-            if (npv >= 0 && irr >= discountRate + 10 && payback <= 2 && roi >= 25 && breakEvenYear <= 2)
-            {
-                return "🚀 **Strong Buy** - Exceptional returns (High NPV, IRR beats hurdle by 10%+, fast payback & breakeven)";
-            }
 
-            // 2️⃣ **Buy (Solid Investment)**
-            if (npv >= 0 && irr >= discountRate + 5 && payback <= 4 && roi >= 15 && breakEvenYear <= 3)
-            {
-                return "📈 **Buy** - Strong fundamentals (Positive NPV, good IRR, reasonable payback)";
-            }
-
-            // 3️⃣ **Hold/Neutral (Acceptable but Weak)**
-            if (npv >= 0 && irr >= discountRate && payback <= 6 && roi >= 10)
-            {
-                return "🤔 **Hold/Neutral** - Meets minimum criteria (NPV ≥ 0, IRR > discount rate) but lacks upside";
-            }
-
-            // 4️⃣ **High Risk (Borderline, Needs Improvement)**
-            if (npv < 0 || irr < discountRate || payback > 6 || roi < 10)
-            {
-                string warning = npv < 0 ? "Negative NPV" : "";
-                warning += irr < discountRate ? (warning != "" ? ", IRR < hurdle" : "IRR < hurdle") : "";
-                warning += payback > 6 ? (warning != "" ? ", slow payback" : "Slow payback") : "";
-                warning += roi < 10 ? (warning != "" ? ", low ROI" : "Low ROI") : "";
-
-                return $"⚠️ **High Risk** - {warning}. Needs cost cuts or revenue boost.";
-            }
-
-            // 5️⃣ **Reject (Financially Unviable)**
-            if (npv < 0 && irr < 0 && payback > 10 && roi < 5)
-            {
-                return "❌ **Reject** - Financially unviable (Negative NPV/IRR, very slow payback)";
-            }
-
-            // Default case (if none match)
-            return "🔍 **Review Manually** - Unclear case (Check assumptions or sensitivity analysis)";
         }
         private async Task<T> GetAIJsonResponse<T>(string prompt)
         {
             var strictPrompt = $@"{prompt}
 
-        IMPORTANT: Your response MUST:
-        1. Be EXACTLY in this JSON schema With scheme
-        2. Contain NO other text, markdown, or formatting
-        3. Have ALL required fields populated
-        4. Escape any special characters ";
+            IMPORTANT: Your response MUST:
+            1. Be EXACTLY in this JSON schema
+            2. Contain NO other text, markdown, or formatting
+            3. Have ALL required fields populated
+            4. No double-escaping or quoting the entire JSON.";
+
             var payload = new
             {
                 model = "mistralai/mistral-7b-instruct",
                 messages = new[] { new { role = "user", content = strictPrompt } },
                 response_format = new { type = "json_object" },
-                temperature = 0.3
+                temperature = 0.1
             };
 
             var response = await _httpClient.PostAsync(
@@ -792,8 +827,16 @@ namespace Fikra.Service.Implementation
             var json = JObject.Parse(content);
             var rawContent = json["choices"]?[0]?["message"]?["content"]?.ToString();
 
+            if (string.IsNullOrWhiteSpace(rawContent))
+                throw new Exception("Empty response from AI.");
 
-            var match = Regex.Match(rawContent ?? "", @"\{[\s\S]*\}");
+            // Handle case where AI returns a quoted JSON string
+            if (rawContent.StartsWith("\""))
+            {
+                rawContent = JsonConvert.DeserializeObject<string>(rawContent); // unescape it
+            }
+
+            var match = Regex.Match(rawContent, @"\{[\s\S]*\}");
             if (!match.Success)
             {
                 throw new Exception("Failed to extract JSON from the AI response.");
@@ -801,8 +844,8 @@ namespace Fikra.Service.Implementation
 
             var jsonOnly = match.Value;
             return JsonConvert.DeserializeObject<T>(jsonOnly);
-
         }
+
 
         private static readonly Dictionary<string, string> CountryNameToCode = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
@@ -938,6 +981,20 @@ namespace Fikra.Service.Implementation
 
             return Task.FromResult(midRate * 100);
         }
+
+        public async Task<List<Idea>> GetIdeasWithRating()
+        {
+            var IdeasWithRating = await _context.Ideas?.Include(x => x.Ratings).ToListAsync();
+            return IdeasWithRating;
+        }
+
+        public async Task<List<Idea>> GetIdeasRelatedToSpecificIdeaOwner(string IdeaOwnerName)
+        {
+            var ideasWithRating = await _context.Ideas.Include(x => x.Ratings).Where(x => x.IdeaOwnerName == IdeaOwnerName).ToListAsync();
+            return ideasWithRating;
+
+        }
+
     }
 
 
@@ -964,7 +1021,6 @@ namespace Fikra.Service.Implementation
     public class TechnologyRecommendation
     {
         public string RecommendedTechnology { get; set; }
-        public string ComplexityLevel { get; set; }
       
         public string Reasoning { get; set; }
     }
@@ -1083,11 +1139,7 @@ namespace Fikra.Service.Implementation
                 notes.Add("+2 months for real-time features");
             }
 
-            if (idea.RequiresMobileApp)
-            {
-                months += 3;
-                notes.Add("+3 months for mobile app");
-            }
+        
 
             if (idea.SecurityCriticalLevel == "Highly Sensitive")
             {
@@ -1153,11 +1205,7 @@ namespace Fikra.Service.Implementation
                 notes.Add("+1 Backend, +1 DevOps for real-time");
             }
 
-            if (idea.RequiresMobileApp)
-            {
-                frontend++;
-                notes.Add("+1 Frontend for mobile app");
-            }
+         
 
             if (idea.SecurityCriticalLevel == "Highly Sensitive")
             {

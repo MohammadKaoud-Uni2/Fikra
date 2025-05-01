@@ -43,6 +43,20 @@ namespace Fikra.Controllers
          var  requestsAfterMapping= _mapper.Map<List<GetRequestDto>>(requests);
             return Ok(requestsAfterMapping);
         }
+        [HttpGet]
+        [Route("GetRequestsCount")]
+        [Authorize(AuthenticationSchemes = "Bearer", Roles = "IdeaOwner")]
+        public async Task<IActionResult> GetIdeaOwnerRequestsCount()
+        {
+            var ideaOwnerName = await _IdentityService.GetCurrentUserName();
+            var ideaOwner = _userManager.FindByNameAsync(ideaOwnerName);
+            var request = await _requestRepo.GetRequestByUserName(ideaOwnerName);
+            if (request == null)
+            {
+                return Ok();
+            }
+            return Ok(request.Count);
+        }
 
     }
 }
