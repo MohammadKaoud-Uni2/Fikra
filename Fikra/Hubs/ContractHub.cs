@@ -20,12 +20,16 @@ namespace Fikra.Hubs
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IMessageRepo _messageRepo;
         private readonly IRSAService _IrsService;
-        public ContractHub(IRequestRepo requestRepo,UserManager<ApplicationUser> userManager, IMessageRepo messageRepo, IRSAService irsService)
+        private readonly IJoinRequestService _joinRequestService;
+        private readonly PresenceTracker _presenceTracker;
+        public ContractHub(IRequestRepo requestRepo,UserManager<ApplicationUser> userManager, IMessageRepo messageRepo, IRSAService irsService,IJoinRequestService joinRequestService,PresenceTracker presenceTracker)
         {
             _requestRepo = requestRepo;
             _userManager = userManager;
             _messageRepo = messageRepo;
             _IrsService = irsService;
+            _joinRequestService = joinRequestService;
+            _presenceTracker = presenceTracker;
         }
 
         public override async Task OnConnectedAsync()
@@ -36,6 +40,7 @@ namespace Fikra.Hubs
             if (!string.IsNullOrEmpty(username))
             {
                 Users[username] = Context.ConnectionId;
+                await _presenceTracker.UserConnected(username, Context.ConnectionId);
 
                 await Clients.Caller.SendAsync("ReceiveMessage", $"Welcome {username}! You are now connected.");
 
@@ -225,10 +230,17 @@ namespace Fikra.Hubs
             var username = Users.FirstOrDefault(u => u.Value == Context.ConnectionId).Key;
             if (!string.IsNullOrEmpty(username))
             {
+                await _presenceTracker.UserDisconnected(username, Context.ConnectionId);
                 Users.TryRemove(username, out _);
             }
 
             await base.OnDisconnectedAsync(exception);
+        }
+      
+        public async Task ReceiveJobRequest(string message)
+        {
+           
+            await Clients.Caller.SendAsync("ReceiveMessage", message);
         }
     }
 }

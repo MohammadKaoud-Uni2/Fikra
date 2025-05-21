@@ -41,7 +41,7 @@ namespace Fikra.Controllers
 
         public async Task<IActionResult> Register([FromForm] RegisterDto RegisterDto ,[FromForm]IFormFile?profilePicture)
         {
-            ApplicationUser userToFind = await identityServices.FindUserByName(RegisterDto.FirstName + RegisterDto.LastName);
+            ApplicationUser userToFind = await _userManager.FindByNameAsync(RegisterDto.FirstName + RegisterDto.LastName);
             userToFind = await identityServices.FindUserByEmail(RegisterDto.Email);
             if (userToFind != null)
             {
@@ -52,6 +52,7 @@ namespace Fikra.Controllers
                 return BadRequest("There Was  A problem Validate One of Columns ");
 
             }
+     
             var roleName = "";
             switch (RegisterDto.RoleRequestd)
             {
@@ -125,6 +126,11 @@ namespace Fikra.Controllers
             var user = await identityServices.FindUserByEmail(loginDto.Email);
             if (user != null)
             {
+                var result = await identityServices.CheckifTheUseriSActive(user);
+                if (result == false)
+                {
+                    return BadRequest("You have been Reached The Maximum Points of Complaints Against you :(");
+                }
                 var resultofCheckingPassword = await _userManager.CheckPasswordAsync(user, loginDto.Password);
                 if (resultofCheckingPassword)
                 {
@@ -140,7 +146,7 @@ namespace Fikra.Controllers
                     };
                     if (response != null)
                     {
-                      // var emailSendingResult = await _emailService.SendEmail(user.Email, "Welcome Prince", "Say Hello from our Company ");
+                      
 
                         return Ok(response);
                     }

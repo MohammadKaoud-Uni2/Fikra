@@ -308,7 +308,9 @@ namespace Fikra.Controllers
                 RequiresDevOpsSetup = true,
                 FrontendComplexity = "Medium",
                 SecurityCriticalLevel = "Normal",
-                DeploymentFrequency = "Bi-Weekly"
+                DeploymentFrequency = "Bi-Weekly",
+                BigServerNeeded = true,
+                HaveBigFiles= true,
             };
 
 
@@ -326,7 +328,7 @@ namespace Fikra.Controllers
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "IdeaOwner")]
         public async Task<IActionResult> CreateIdeaPost([FromBody] AddIdeaDto ideaDto)
         {
-           var idea=await _IdeaService.GetTableAsNoTracking().FirstOrDefaultAsync(x=>x.Title.Equals(ideaDto.Title,StringComparison.OrdinalIgnoreCase));
+           var idea=await _IdeaService.GetTableAsNoTracking().FirstOrDefaultAsync(x=>x.Title.Equals(ideaDto.Title));
             if (idea != null)
             {
                 return BadRequest("This Idea has Been taken And Registered Before");
@@ -355,14 +357,14 @@ namespace Fikra.Controllers
         }
         
        
-        [HttpGet]
+        [HttpPost]
         [Route("GetFinanceStudy")]
         [Authorize(AuthenticationSchemes ="Bearer",Roles ="Investor")]
         public async Task<IActionResult> GetFinanceStudy([FromBody] GetIdeaFinanceDto getIdeaFinanceDto)
         {
 
             var allIdea=await _IdeaService.GetTableAsNoTracking().ToListAsync();
-            var ideaToStudy=allIdea.FirstOrDefault(x=>x.Title.Equals(getIdeaFinanceDto.Title,StringComparison.OrdinalIgnoreCase));
+            var ideaToStudy=allIdea.FirstOrDefault(x=>x.Title.Equals(getIdeaFinanceDto.Title));
             if (ideaToStudy == null)
             {
                 return NotFound($" Idea With Title :{getIdeaFinanceDto.Title}NotFound:");
@@ -407,11 +409,15 @@ namespace Fikra.Controllers
             var result=await _IdeaService.GetIdeasRelatedToSpecificIdeaOwner(currentUserName);
             if (result != null)
             {
-                return Ok(result.Count());
+                return Ok(new
+                {
+                    IdeasCount = result.Count()
+                });
             }
             return Ok();
 
         }
+       
         [HttpPost]
         [Route("RateIdea")]
         [Authorize(AuthenticationSchemes = "Bearer", Roles = "Investor")] 
@@ -451,6 +457,25 @@ namespace Fikra.Controllers
 
             return Ok( );
         }
+        [HttpGet]
+        [Route("GetIdeasPostsRelatedToFreelancer")]
+        [Authorize(AuthenticationSchemes ="Bearer",Roles ="Freelancer")]
+        public async Task<IActionResult> GetIdeasPostsRealtedToFreelancer()
+        {
+            var Ideas=await _IdeaService.GetTableAsNoTracking().Where(x=>x.Confirmed==true).ToListAsync();
+            if (Ideas.Any())
+            {
+                var ideasAftermappingforfreelancer=_mapper.Map<List<GetFreelancerIdeasDto>>(Ideas);
+                return Ok(ideasAftermappingforfreelancer);
+
+            }
+            return Ok(new
+            {
+                message = "Db Does not Contian any Ideas right now!:"
+            });
+
+        }
+
         
     }
     public class GetIdeaFinanceDto

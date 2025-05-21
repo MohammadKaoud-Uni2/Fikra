@@ -23,6 +23,7 @@ namespace Fikra.Models
         
         public double ?IdeaOwnerpercentage { get; set; }
         public string ContractPdfUrl { get; set; }
+        public  string IdeaTitle { get; set; }
 
     }
 }

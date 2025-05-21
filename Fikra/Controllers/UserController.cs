@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SparkLink.Models.Identity;
 using SparkLink.Service.Interface;
+using System.Security.Claims;
 
 namespace Fikra.Controllers
 {
@@ -17,12 +18,16 @@ namespace Fikra.Controllers
         private readonly IIdentityServices _identityService;
         private readonly IMapper _Mapper;
         private readonly IPhotoService _photoService;
-        public UserController(UserManager<ApplicationUser>userManager,IIdentityServices identityServices,IMapper mapper,IPhotoService photoService)
+        private readonly IHttpContextAccessor  _httpcontextAccessor;
+        private readonly IEmailService _emailService;
+        public UserController(UserManager<ApplicationUser>userManager,IIdentityServices identityServices,IMapper mapper,IPhotoService photoService,IHttpContextAccessor httpContextAccessor,IEmailService emailService)
         {
             _userManager = userManager;
             _identityService= identityServices;
             _Mapper = mapper;
             _photoService= photoService;
+            _httpcontextAccessor = httpContextAccessor;
+            _emailService= emailService;
             
         }
         [HttpGet]
@@ -30,10 +35,16 @@ namespace Fikra.Controllers
         [Authorize(AuthenticationSchemes ="Bearer")]
         public async Task<IActionResult> GetPersonalInformation()
         {
-            var currentUserName=await _identityService.GetCurrentUserName();
-            var user=await _userManager.FindByNameAsync(currentUserName);
+            var user = _httpcontextAccessor.HttpContext.User;
+            string UserId = "";
+            if (user.Identity.IsAuthenticated)
+            {
+                UserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                
+            }
+            var userTofind=await _userManager.FindByIdAsync(UserId);
 
-            var userAfterMapping= _Mapper.Map<GetProfileDto>(user);
+            var userAfterMapping= _Mapper.Map<GetProfileDto>(userTofind);
             if (userAfterMapping != null)
             {
                 return Ok(userAfterMapping);
@@ -46,9 +57,8 @@ namespace Fikra.Controllers
         public async Task<IActionResult> UpdatePersonalInformation([FromForm]UpdateUserDto updateUserDto, [FromForm] IFormFile? profilePicture)
         {
             var currentUsername=await _identityService.GetCurrentUserName();
-           var user=await  _userManager.FindByNameAsync(currentUsername);
+            var user = await _userManager.FindByNameAsync(currentUsername);
             user.Email=updateUserDto.Email;
-            user.UserName=updateUserDto.UserName;
             user.LinkedinUrl=updateUserDto.LinkedInUrl;
             if (profilePicture != null)
             {
@@ -66,5 +76,16 @@ namespace Fikra.Controllers
             return Ok(result);
 
         }
+        //[HttpPost]
+        //[Route("TestHomsi")]
+        //public async Task<IActionResult> testHomsi()
+        //{
+        //    var resultofSendingEmail = await _emailService.SendEmail("mohammadkaoud17@gmail.com", "Welcome from our company Sparklink", "Say hello and testing");
+        //    if (resultofSendingEmail == "Success")
+        //    {
+        //        return Ok("CheckYourMailBox");
+        //    }
+        //    return BadRequest("Error");
+        //}
     }
 }

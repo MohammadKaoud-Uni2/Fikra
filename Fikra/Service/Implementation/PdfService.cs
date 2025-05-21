@@ -1,4 +1,5 @@
-﻿using Fikra.Models;
+﻿using AutoMapper;
+using Fikra.Models;
 using Fikra.Service.Interface;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -23,10 +24,12 @@ namespace Fikra.Service.Implementation
         private readonly IStripeService _stripeService;
         private readonly IStripeCustomer _stripeCustomerRepo;
         private readonly IStripeAccountsRepo _stripeAccountsRepo;
-        private readonly IIdeaService _IdeaService; 
+        private readonly IIdeaService _IdeaService;
+        private readonly ICVService _cvService;
+        private readonly IMapper _mapper;
 
         private readonly ITransictionRepo _transictionRepo;
-        public PdfService(IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor, IRSAService rsaService,ISignatureRepo signatureRepo,UserManager<ApplicationUser>UserManager,IContractRepo contractRepo,IConfiguration configuration,IStripeService stripeService,IStripeAccountsRepo stripeAccountsRepo,IStripeCustomer stripeCustomer,ITransictionRepo transictionRepo,IIdeaService ideaService)
+        public PdfService(IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor, IRSAService rsaService,ISignatureRepo signatureRepo,UserManager<ApplicationUser>UserManager,IContractRepo contractRepo,IConfiguration configuration,IStripeService stripeService,IStripeAccountsRepo stripeAccountsRepo,IStripeCustomer stripeCustomer,ITransictionRepo transictionRepo,IIdeaService ideaService,ICVService cVService,IMapper mapper)
         {
             _webHostEnvironment = webHostEnvironment;
             _httpContextAccessor = httpContextAccessor;
@@ -40,9 +43,11 @@ namespace Fikra.Service.Implementation
             _stripeAccountsRepo = stripeAccountsRepo;
             _transictionRepo = transictionRepo;
             _IdeaService= ideaService;
+            _cvService = cVService;
+            _mapper = mapper;
         }
 
-        public async Task<string> GenerateContract(string ideaOwnerName, string investorName, double budget, DateTime date, string IdeaownerSignature, string investorSignature, byte[] logoBytes,string ideaTitle)
+        public async Task<string> GenerateContract(string ideaOwnerName, string investorName, double budget, DateTime date, string IdeaownerSignature, string investorSignature, byte[] logoBytes,string ideaTitle, double ideaOwnerPercentage)
         { 
             string contractsPath = Path.Combine(_webHostEnvironment.ContentRootPath, "contracts");
             if (!Directory.Exists(contractsPath))
@@ -183,9 +188,13 @@ namespace Fikra.Service.Implementation
                 Investor = secondPeerNametoCheck,
                 IdeaOwner = firstPeerNameToCheck,
                 IdeaOwnerId = firstPeerNameToCheck.Id,
+
                 Budget = budget,
-                IdeaOwnerpercentage = 0.0,
+                IdeaTitle=ideaTitle,
+                IdeaOwnerpercentage = ideaOwnerPercentage,
+
             };
+           
             var stripeCustomersaccounts =  _stripeCustomerRepo.GetTableAsNoTracking().Include(x => x.ApplicationUser);
             var checkInvestor = await stripeCustomersaccounts.FirstOrDefaultAsync(x => x.ApplicationUser.UserName == investorName);
             if (checkInvestor == null)
@@ -213,7 +222,7 @@ namespace Fikra.Service.Implementation
             //end AdminSection
             // start for IDeaOwnerSection
             var stripeAccounts =  _stripeAccountsRepo.GetTableAsNoTracking().Include(x => x.ApplicationUser);
-            var checkIdeaOwner=stripeAccounts.FirstOrDefaultAsync(x=>x.ApplicationUser.UserName==firstPeerNameToCheck.UserName);
+            var checkIdeaOwner=await stripeAccounts.FirstOrDefaultAsync(x=>x.ApplicationUser.UserName==firstPeerNameToCheck.UserName);
             if (checkIdeaOwner == null)
             {
                
@@ -278,6 +287,101 @@ namespace Fikra.Service.Implementation
             await _contractRepo.SaveChangesAsync();
 
             
+            return PdfUrl;
+        }
+
+        public async  Task<string> GenerateCV(GenerateCVDto freelancerCvDto,string UserName)
+        {
+            var freelancer=await _userManager.FindByNameAsync(UserName);
+            string cvpath = Path.Combine(_webHostEnvironment.ContentRootPath, "cvs");
+            if (!Directory.Exists(cvpath))
+                Directory.CreateDirectory(cvpath);
+
+            string fileName = $"CV_{UserName}_.pdf";
+            string outputFilePath = Path.Combine(cvpath, fileName);
+            Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(30);
+                    page.PageColor(Colors.White);
+                    page.DefaultTextStyle(TextStyle.Default.FontSize(12).FontColor(Colors.Black));
+
+                    page.Header().Row(row =>
+                    {
+                        row.RelativeItem().Column(col =>
+                        {
+                            col.Item().Text(freelancer.FirstName+freelancer.FatherName+freelancer.LastName).FontSize(18).Bold();
+                            col.Item().Text(freelancerCvDto.Title).FontSize(14).Italic().FontColor(Colors.Grey.Darken1);
+                            col.Item().Text($"Country: {freelancer.Country}");
+                            col.Item().PaddingTop(5);
+                            col.Item().Text($"Email: {freelancer.Email}");
+                            col.Item().Text($"Phone: {freelancerCvDto.Phone}");
+                            if (!string.IsNullOrWhiteSpace(freelancer.LinkedinUrl))
+                                col.Item().Text($"LinkedIn: {freelancer.LinkedinUrl}");
+                        });
+
+                        //if (freelancerCvDto.ProfileIma != null)
+                        //{
+                        //    row.ConstantItem(80).Height(80).Image(freelancerCvDto.ProfileImageBytes).WithCompressionQuality(ImageCompressionQuality.Medium);
+                        //}
+                    });
+
+                    page.Content().Column(col =>
+                    {
+                        col.Item().PaddingVertical(10);
+
+                        col.Item().Text("Professional Summary").FontSize(14).Bold().Underline();
+                        col.Item().Text(freelancerCvDto.Summary ?? "N/A").FontSize(12);
+
+                        col.Item().PaddingVertical(10);
+
+                        col.Item().Text("Technologies").FontSize(14).Bold().Underline();
+                        foreach (var tech in freelancerCvDto.Technologies ?? new List<SkillLevelDto>())
+                            col.Item().Text($"• {tech.Technology} - {tech.Level}");
+
+                        col.Item().PaddingVertical(10);
+
+                        col.Item().Text("Education").FontSize(14).Bold().Underline();
+                        foreach (var edu in freelancerCvDto.Education ?? new List<string>())
+                            col.Item().Text($"• {edu}");
+
+                        col.Item().PaddingVertical(10);
+
+                        col.Item().Text("Experience").FontSize(14).Bold().Underline();
+                        foreach (var exp in freelancerCvDto.Experience ?? new List<string>())
+                            col.Item().Text($"• {exp}");
+                    });
+
+                    page.Footer().AlignCenter()
+                        .Text("Generated by Fikra Freelancer Platform")
+                        .FontSize(10).Italic().FontColor(Colors.Grey.Darken1);
+                });
+            }).GeneratePdf(outputFilePath);
+            var customUrl = _configuration["AppSettings:BaseUrl"];
+            var request = _httpContextAccessor.HttpContext.Request;
+            var PdfUrl = $"{customUrl}cvs/{fileName}";
+            var mappedSkills = _mapper.Map <List<SkillLevel>>(freelancerCvDto.Technologies);
+            var cv = new CV()
+            {
+                ApplicationUser = freelancer,
+                ApplicationUserId = freelancer.Id,
+                Country = freelancer.Country,
+                Experience = freelancerCvDto.Experience,
+                Education = freelancerCvDto.Education,
+                Phone = freelancerCvDto.Phone,
+                Summary = freelancerCvDto.Summary,
+                Technologies = mappedSkills,
+                Title = freelancerCvDto.Title,
+                CVPdfUrl = PdfUrl,
+
+
+            };
+           await  _cvService.AddAsync(cv);
+            await _cvService.SaveChangesAsync();
+
+          
             return PdfUrl;
         }
 

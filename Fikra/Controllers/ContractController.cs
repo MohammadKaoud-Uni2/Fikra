@@ -25,8 +25,8 @@ namespace Fikra.Controllers
         private readonly IHubContext<ContractHub>_hubContext;
         private readonly IStripeCustomer _stripeCustomerRepo;
         private readonly IStripeAccountsRepo _stripeAccountsRepo;
-
         private readonly ITransictionRepo _transictionRepo;
+
         public ContractController(IContractRepo contractRepo,IMapper mapper,IIdentityServices identityServices,IPdfService pdfService,IHubContext<ContractHub> hubContext,UserManager<ApplicationUser>userManager,IStripeCustomer stripeCustomer,IStripeAccountsRepo stripeAccountsRepo,ITransictionRepo transictionRepo)
         {
             _contractRepo = contractRepo;
@@ -51,7 +51,10 @@ namespace Fikra.Controllers
                var contractsAfterMapping=_mapper.Map<List<GetContractDto>>(contracts);
                return Ok(contractsAfterMapping);
             }
-            return BadRequest("Problem While Fetching the contract !");
+            return BadRequest(new
+            {
+                message="There Are no Contract in DB"
+            });
 
         }
         [HttpPost]
@@ -69,14 +72,14 @@ namespace Fikra.Controllers
                 if (firstUserRoles.Contains("IdeaOwner"))
                 {
                     contractPdfUrl = await _PdfService.GenerateContract(firstUserName, generateContractDto.InvestorName, generateContractDto.Budget, DateTime.Now, generateContractDto.IdeaOwnerSignature, generateContractDto
-                       .InvestorSignature, logoimage,generateContractDto.IdeaTitle);
+                       .InvestorSignature, logoimage,generateContractDto.IdeaTitle,generateContractDto.IdeaOwnerPercentage);
 
 
                 }
                 else
                 {
                     contractPdfUrl = await _PdfService.GenerateContract(generateContractDto.InvestorName, firstUserName, generateContractDto.Budget, DateTime.Now, generateContractDto.IdeaOwnerSignature, generateContractDto
-                          .InvestorSignature, logoimage,generateContractDto.IdeaTitle);
+                          .InvestorSignature, logoimage,generateContractDto.IdeaTitle,generateContractDto.IdeaOwnerPercentage);
                 }
                 if (contractPdfUrl.StartsWith("ht"))
                 {

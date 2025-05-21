@@ -55,6 +55,7 @@ namespace SparkLink.Data
                 .WithMany()
                 .HasForeignKey(c => c.InvestorId)
                 .OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<CV>().HasOne(c=>c.ApplicationUser).WithOne(x=>x.CV).OnDelete(DeleteBehavior.Cascade);
 
 
 
@@ -67,9 +68,17 @@ namespace SparkLink.Data
         public DbSet<IdeaRating>IdeaRatings { get; set; }
         public DbSet<Message>Messages { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
-
+        public DbSet<CV> CVs { get; set; }
         public DbSet<StripeCustomer> StripeCustomers { get; set; }
         public DbSet<StripeAccount>StripeAccounts { get; set; }
+        public DbSet<JoinRequest> JoinRequests { get; set; }
+        public DbSet<GroupMember> GroupMembers { get; set; }
+        public DbSet<ChatGroup>ChatGroups { get; set; }
+        public DbSet<Complaint> Complaints { get; set; }
+        public DbSet<PenaltyPoint> penaltyPoints { get; set; }
+
+        public DbSet<GroupMessage>GroupesMessages { get; set; }
+
 
     }
 }

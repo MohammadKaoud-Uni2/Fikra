@@ -55,7 +55,10 @@ namespace Fikra.Controllers
             {
                 return Ok();
             }
-            return Ok(request.Count);
+            return Ok(new
+            {
+                RequestCount = request.Count,
+            });
         }
 
     }

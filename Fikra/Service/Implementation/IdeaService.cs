@@ -28,16 +28,16 @@ namespace Fikra.Service.Implementation
         {
             _context = context;
             _httpClient = new HttpClient();
-            _openRouterApiKey = "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";
+            _openRouterApiKey = "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";
 
 
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_openRouterApiKey}");
-      
+
         }
         public decimal Initinvestment { get; set; }
-       
+
         IdeaSuggestionResult suggestionResult = new IdeaSuggestionResult();
-        private async Task<SalaryData> GetDeveloperSalaries(string techReasioning, string country,string backendLevel,string frontendLevel,string devOpsLevel)
+        private async Task<SalaryData> GetDeveloperSalaries(string techReasioning, string country, string backendLevel, string frontendLevel, string devOpsLevel)
         {
             var prompt = $@"
                 Estimate the average **annual salaries** in USD for the following developer roles based on the project requirements:
@@ -86,19 +86,19 @@ namespace Fikra.Service.Implementation
             string devOpsLevel = "Mid";
 
 
-            if (idea.RequiresRealTimeFeatures || idea.SecurityCriticalLevel.Equals("Highly Sensitive",StringComparison.OrdinalIgnoreCase))
+            if (idea.RequiresRealTimeFeatures || idea.SecurityCriticalLevel.Equals("Highly Sensitive", StringComparison.OrdinalIgnoreCase))
                 backendLevel = "Senior";
 
-          
-            if (idea.FrontendComplexity.Equals("Complex",StringComparison.OrdinalIgnoreCase))
+
+            if (idea.FrontendComplexity.Equals("Complex", StringComparison.OrdinalIgnoreCase))
                 frontendLevel = "Senior";
             else if (idea.FrontendComplexity == "Simple")
                 frontendLevel = "Junior";
 
-            
-            if (idea.RequiresDevOpsSetup && idea.DeploymentFrequency.Equals("Daily",StringComparison.OrdinalIgnoreCase))
+
+            if (idea.RequiresDevOpsSetup && idea.DeploymentFrequency.Equals("Daily", StringComparison.OrdinalIgnoreCase))
                 devOpsLevel = "Senior";
-            else if (idea.RequiresDevOpsSetup && idea.DeploymentFrequency.Equals("Weekly",StringComparison.OrdinalIgnoreCase))
+            else if (idea.RequiresDevOpsSetup && idea.DeploymentFrequency.Equals("Weekly", StringComparison.OrdinalIgnoreCase))
                 devOpsLevel = "Mid";
             else
                 devOpsLevel = "Junior";
@@ -113,25 +113,25 @@ namespace Fikra.Service.Implementation
 
             try
             {
-      
+
                 var investmentNeeds = await CalculateRequiredInvestment(idea);
                 decimal initialInvestment = investmentNeeds.Item1.Total;
                 this.Initinvestment = initialInvestment;
-                var marketData = await GetTechMarketData(idea.Category,idea.Country);
-               
+                var marketData = await GetTechMarketData(idea.Category, idea.Country);
 
-   
+
+
                 var revenueProjection = ProjectRevenue(idea);
 
-                var financialAnalysis  =CalculateFinancialMetrics(investmentNeeds.Item1, revenueProjection, initialInvestment, idea, marketData,investmentNeeds.Item2);
+                var financialAnalysis = CalculateFinancialMetrics(investmentNeeds.Item1, revenueProjection, initialInvestment, idea, marketData, investmentNeeds.Item2);
 
-            
+
                 var successProbability = CalculateRealisticSuccessProbability(
                     financialAnalysis);
-                var swotAnalysis = await  GenerateCompleteSWOTAnalysis(idea, marketData);
+                var swotAnalysis = await GenerateCompleteSWOTAnalysis(idea, marketData);
 
                 var MonthEstimator = SmartDevelopmentMonthEstimator.Estimate(idea);
-                var DeveloperEstimator=TeamSizeEstimator.Estimate(idea);
+                var DeveloperEstimator = TeamSizeEstimator.Estimate(idea);
                 return new FullProjectAnalysis
                 {
                     InitialInvestmentRequired = initialInvestment,
@@ -139,16 +139,16 @@ namespace Fikra.Service.Implementation
                     SWOTAnalysis = swotAnalysis,
                     FinancialAnalysis = financialAnalysis,
                     technologyRecommendation = investmentNeeds.Item2,
-                    CostEstimation=investmentNeeds.Item1,
+                    CostEstimation = investmentNeeds.Item1,
                     revenueProjection = revenueProjection,
-          
+
                     GeneratedAt = DateTime.UtcNow,
-                    salaryData=investmentNeeds.Item1.SalaryData,
-                    initWorkingMonthDevelopment=MonthEstimator.months,
-                    BackEndDevelopers=DeveloperEstimator.backend,
-                    FrontEndDevelopers=DeveloperEstimator.frontend,
-                    QA=DeveloperEstimator.qa,
-                    DevOps=DeveloperEstimator.devops,
+                    salaryData = investmentNeeds.Item1.SalaryData,
+                    initWorkingMonthDevelopment = MonthEstimator.months,
+                    BackEndDevelopers = DeveloperEstimator.backend,
+                    FrontEndDevelopers = DeveloperEstimator.frontend,
+                    QA = DeveloperEstimator.qa,
+                    DevOps = DeveloperEstimator.devops,
                 };
             }
 
@@ -172,10 +172,10 @@ namespace Fikra.Service.Implementation
 
 
         }
-       
 
 
-        private async Task<TechnologyRecommendation> GetTechnologyRecommendation(Idea idea,string backendLevel,string frontendLevel,string DevopsLevel)
+
+        private async Task<TechnologyRecommendation> GetTechnologyRecommendation(Idea idea, string backendLevel, string frontendLevel, string DevopsLevel)
         {
 
 
@@ -225,7 +225,7 @@ namespace Fikra.Service.Implementation
 
 
 
-        private TeamCostBreakdown CalculateTeamCosts(int BackendDevelopers,int FrontEndDevelopers,int DevOpsEngineers,int QASpecialists, SalaryData salaries, int months)
+        private TeamCostBreakdown CalculateTeamCosts(int BackendDevelopers, int FrontEndDevelopers, int DevOpsEngineers, int QASpecialists, SalaryData salaries, int months)
         {
             decimal backendDevCost = BackendDevelopers * salaries.BackendDeveloper / 12 * months;
             decimal frontendDevCost = FrontEndDevelopers * salaries.FrontEndDeveloper / 12 * months;
@@ -277,28 +277,28 @@ namespace Fikra.Service.Implementation
                     {
                         Description = s.Description,
 
-                     
+
                     }).ToList(),
 
                 Weaknesses = aiSwot.Weaknesses
                     .Select(w => new SWOTFactor
                     {
                         Description = w.Description,
-                  
+
                     }).ToList(),
 
                 Opportunities = aiSwot.Opportunities
                     .Select(o => new SWOTFactor
                     {
                         Description = o.Description,
-        
+
                     }).ToList(),
 
                 Threats = aiSwot.Threats
                     .Select(t => new SWOTFactor
                     {
                         Description = t.Description,
-          
+
                     }).ToList()
             };
         }
@@ -374,7 +374,7 @@ namespace Fikra.Service.Implementation
                 cumulative += flow.Amount;
                 flow.Cumulative = cumulative;
             }
-            double discountRate = CalculateDiscountRate(idea,technologyRecommendation, revenue, market);
+            double discountRate = CalculateDiscountRate(idea, technologyRecommendation, revenue, market);
             var PaybackPeriodYears = CalculatePaybackPeriod(cashFlows);
             return new FinancialAnalysis
             {
@@ -466,23 +466,23 @@ namespace Fikra.Service.Implementation
 
 
 
-        public async Task<(CalculatedInvestment,TechnologyRecommendation)> CalculateRequiredInvestment(Idea idea)
+        public async Task<(CalculatedInvestment, TechnologyRecommendation)> CalculateRequiredInvestment(Idea idea)
         {
 
 
-      
-  
+
+
             var DeveloperLevels = DetectDeveloperLevels(idea);
 
 
-   
-        
+
+
             var techRecommendation = await GetTechnologyRecommendation(idea, DeveloperLevels.backendLevel, DeveloperLevels.frontendLevel, DeveloperLevels.devOpsLevel);
-          var DevelopmentMonth =  SmartDevelopmentMonthEstimator.Estimate(idea);
-            var DeveloperNumberNeeded=TeamSizeEstimator.Estimate(idea);
+            var DevelopmentMonth = SmartDevelopmentMonthEstimator.Estimate(idea);
+            var DeveloperNumberNeeded = TeamSizeEstimator.Estimate(idea);
             var salaryData = await GetDeveloperSalaries(techRecommendation.Reasoning, idea.Country, DeveloperLevels.backendLevel, DeveloperLevels.frontendLevel, DeveloperLevels.devOpsLevel);
-            var calculateTeamcost = CalculateTeamCosts(DeveloperNumberNeeded.backend,DeveloperNumberNeeded.frontend,DeveloperNumberNeeded.devops,DeveloperNumberNeeded.qa, salaryData, DevelopmentMonth.months);
-            var infrastructre = await CalculateInfrastructureCost( idea);
+            var calculateTeamcost = CalculateTeamCosts(DeveloperNumberNeeded.backend, DeveloperNumberNeeded.frontend, DeveloperNumberNeeded.devops, DeveloperNumberNeeded.qa, salaryData, DevelopmentMonth.months);
+            var infrastructre = await CalculateInfrastructureCost(idea);
 
 
 
@@ -502,15 +502,15 @@ namespace Fikra.Service.Implementation
             };
             costs.baseCost = costs.Development + costs.Infrastructure + costs.Tooling + costs.Marketing;
 
-            costs.Contingency =costs.baseCost * 0.25m;
+            costs.Contingency = costs.baseCost * 0.25m;
             costs.MaintenanceCost = (costs.TeamCostBreakdown.TotalCost * 0.18m * 3) + (infrastructre.TotalMonthly * 36);
-   
 
 
 
-            return (costs,techRecommendation);
+
+            return (costs, techRecommendation);
         }
-      
+
         private decimal CalculateToolingCost(List<string> tools)
         {
             decimal total = 0;
@@ -531,7 +531,7 @@ namespace Fikra.Service.Implementation
                 };
             }
 
-            return total * 12; 
+            return total * 12;
         }
 
 
@@ -586,13 +586,13 @@ namespace Fikra.Service.Implementation
                 _ => 28m                // General average fallback
             };
 
-       
+
             if (targetAudience.ToLower().Contains("enterprise"))
                 cac *= 1.5m;
 
             int payingUsers = (int)(expectedUsers * (conversionRate / 100.0));
 
-       
+
             decimal acquisitionCost = payingUsers * cac;
 
             decimal retentionMarketing = acquisitionCost * 0.2m;
@@ -679,10 +679,10 @@ namespace Fikra.Service.Implementation
             public double juniors { get; set; }
         }
         public InfrastructureCostAnalysis infrastructureCostAnalysis { get; set; }
-        private async Task<InfrastructureCostAnalysis> CalculateInfrastructureCost( Idea idea)
+        private async Task<InfrastructureCostAnalysis> CalculateInfrastructureCost(Idea idea)
         {
-           
-          
+
+
             var requiredServices = new List<string>
     {
         "Virtual Machines (Standard_B2s, Linux)",
@@ -727,13 +727,13 @@ namespace Fikra.Service.Implementation
             var Storage = costs.infrastructureItems.FirstOrDefault(x => x.serviceName.Equals("Storage"));
             var band = costs.infrastructureItems.FirstOrDefault(x => x.serviceName.Equals("Bandwidth"));
             var sql = costs.infrastructureItems.FirstOrDefault(x => x.serviceName.Equals("Azure SQL Database"));
-            var total=CalculateTotalMonthlyCost(vm.unitPrice,Storage.unitPrice, band.unitPrice, sql.unitPrice,idea);
-            costs.TotalMonthly=total;
+            var total = CalculateTotalMonthlyCost(vm.unitPrice, Storage.unitPrice, band.unitPrice, sql.unitPrice, idea);
+            costs.TotalMonthly = total;
             infrastructureCostAnalysis = costs;
             return infrastructureCostAnalysis;
-       
 
-      
+
+
 
         }
         public static decimal CalculateTotalMonthlyCost(
@@ -743,31 +743,31 @@ namespace Fikra.Service.Implementation
        decimal sqlDbMonthlyPrice,
        Idea idea)
         {
-        
+
             int vmCount = 1;
             int storageGB = 500;
             int bandwidthGB = 1000;
 
-          
+
             if (idea.BigServerNeeded == true || idea.ExpectedUserCount > 10000)
             {
                 vmCount = 2;
             }
 
-       
+
             if (idea.HaveBigFiles == true)
             {
                 storageGB = 1000; // 1 TB
             }
 
-           
+
             if (idea.RequiresRealTimeFeatures == true)
             {
-                bandwidthGB = 2000; 
+                bandwidthGB = 2000;
             }
 
 
-            decimal vmHoursPerMonth = 24 * 30; 
+            decimal vmHoursPerMonth = 24 * 30;
             decimal vmCost = vmHourlyPrice * vmHoursPerMonth * vmCount;
 
             decimal storageCost = storagePricePerGB * storageGB;
@@ -786,17 +786,17 @@ namespace Fikra.Service.Implementation
 
         public class InfrastructureCostAnalysis
         {
-           public List<InfrastructureItem> infrastructureItems { get; set; }
+            public List<InfrastructureItem> infrastructureItems { get; set; }
             public string Source { get; set; }
 
             [JsonIgnore]
-            public decimal TotalMonthly {  get; set; }
+            public decimal TotalMonthly { get; set; }
         }
         public class InfrastructureItem
         {
             public string serviceName { get; set; }
             public decimal unitPrice { get; set; }
-            public string unitMeasure {  get; set; }
+            public string unitMeasure { get; set; }
 
 
         }
@@ -859,7 +859,7 @@ namespace Fikra.Service.Implementation
         { "India", "IND" },
         { "Brazil", "BRA" },
         { "Japan", "JPN" }
-   
+
     };
 
         public static string GetCountryCode(string countryName)
@@ -874,7 +874,7 @@ namespace Fikra.Service.Implementation
         {
             if (countryCode.Length > 3)
             {
-              countryCode=  GetCountryCode(countryCode);
+                countryCode = GetCountryCode(countryCode);
             }
             try
             {
@@ -1004,7 +1004,7 @@ namespace Fikra.Service.Implementation
     {
         public string DevelopmentComplexity { get; set; }
         public List<string> InfrastructureNeeds { get; set; } = new();
-       
+
     }
     public class InfrastructureCostEstimate
     {
@@ -1021,7 +1021,7 @@ namespace Fikra.Service.Implementation
     public class TechnologyRecommendation
     {
         public string RecommendedTechnology { get; set; }
-      
+
         public string Reasoning { get; set; }
     }
 
@@ -1029,7 +1029,7 @@ namespace Fikra.Service.Implementation
     {
         public int FrontEndDevelopers { get; set; }
         public int BackendDevelopers { get; set; }
-     
+
         public int DevOpsEngineers { get; set; }
         public int QASpecialists { get; set; }
     }
@@ -1038,8 +1038,8 @@ namespace Fikra.Service.Implementation
     {
         public decimal FrontEndDeveloper { get; set; }
         public decimal BackendDeveloper { get; set; }
-       
-        public decimal DevOpsEngineer{ get; set; }
+
+        public decimal DevOpsEngineer { get; set; }
         public decimal QAEngineer { get; set; }
         public string Source { get; set; }
 
@@ -1088,9 +1088,9 @@ namespace Fikra.Service.Implementation
         public SalaryData SalaryData { get; set; }
         public TeamCostBreakdown TeamCostBreakdown { get; set; }
         public InfrastructureCostAnalysis InfrastructureCostEstimate { get; set; }
-        public decimal MaintenanceCost { get; set; } 
+        public decimal MaintenanceCost { get; set; }
 
-        
+
         public decimal Total => Development + Infrastructure + Tooling + Marketing + Contingency;
     }
 
@@ -1108,7 +1108,7 @@ namespace Fikra.Service.Implementation
     }
     public static class SmartDevelopmentMonthEstimator
     {
-   
+
         public static (int months, string notes) Estimate(Idea idea)
         {
             int months = 6; // Base months for MVP
@@ -1139,7 +1139,7 @@ namespace Fikra.Service.Implementation
                 notes.Add("+2 months for real-time features");
             }
 
-        
+
 
             if (idea.SecurityCriticalLevel == "Highly Sensitive")
             {
@@ -1164,7 +1164,7 @@ namespace Fikra.Service.Implementation
                 notes.Add("+3 months for Fintech category");
             }
 
-            if (months > 18) months = 18; 
+            if (months > 18) months = 18;
 
             return (months, string.Join(" | ", notes));
         }
@@ -1172,7 +1172,7 @@ namespace Fikra.Service.Implementation
 
     public static class TeamSizeEstimator
     {
-       
+
         public static (int frontend, int backend, int devops, int qa, string notes) Estimate(Idea idea)
         {
             int frontend = 1, backend = 1, devops = 1, qa = 1;
@@ -1205,7 +1205,7 @@ namespace Fikra.Service.Implementation
                 notes.Add("+1 Backend, +1 DevOps for real-time");
             }
 
-         
+
 
             if (idea.SecurityCriticalLevel == "Highly Sensitive")
             {
@@ -1219,13 +1219,3 @@ namespace Fikra.Service.Implementation
     }
 
 }
-
-
-
-
-
-
-
-
-
-

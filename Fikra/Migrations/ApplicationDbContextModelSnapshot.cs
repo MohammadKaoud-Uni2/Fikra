@@ -22,6 +22,116 @@ namespace Fikra.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Fikra.Models.CV", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("CVPdfUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Education")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Experience")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId")
+                        .IsUnique();
+
+                    b.ToTable("CVs");
+                });
+
+            modelBuilder.Entity("Fikra.Models.ChatGroup", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("IdeaOwnerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IdeaTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ChatGroups");
+                });
+
+            modelBuilder.Entity("Fikra.Models.Complaint", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("AdditonalNote")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AgainstUserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EvidenceUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FromUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Complaints");
+                });
+
             modelBuilder.Entity("Fikra.Models.Contract", b =>
                 {
                     b.Property<string>("Id")
@@ -48,6 +158,10 @@ namespace Fikra.Migrations
                     b.Property<double?>("IdeaOwnerpercentage")
                         .HasColumnType("float");
 
+                    b.Property<string>("IdeaTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("InvestorId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -61,6 +175,64 @@ namespace Fikra.Migrations
                     b.HasIndex("InvestorId");
 
                     b.ToTable("Contracts");
+                });
+
+            modelBuilder.Entity("Fikra.Models.GroupMember", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("GroupId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("GroupId");
+
+                    b.ToTable("GroupMembers");
+                });
+
+            modelBuilder.Entity("Fikra.Models.GroupMessage", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ChatGroupId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChatGroupId");
+
+                    b.ToTable("GroupesMessages");
                 });
 
             modelBuilder.Entity("Fikra.Models.Idea", b =>
@@ -194,6 +366,46 @@ namespace Fikra.Migrations
                     b.ToTable("IdeaRatings");
                 });
 
+            modelBuilder.Entity("Fikra.Models.JoinRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CvUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FreelancerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IdeaOwnerName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ideaTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("JoinRequests");
+                });
+
             modelBuilder.Entity("Fikra.Models.Message", b =>
                 {
                     b.Property<string>("Id")
@@ -220,6 +432,39 @@ namespace Fikra.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Messages");
+                });
+
+            modelBuilder.Entity("Fikra.Models.PenaltyPoint", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ComplaintId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("IssuedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("ComplaintId");
+
+                    b.ToTable("penaltyPoints");
                 });
 
             modelBuilder.Entity("Fikra.Models.Request", b =>
@@ -377,6 +622,30 @@ namespace Fikra.Migrations
                     b.HasIndex("InvestorId");
 
                     b.ToTable("Transactions");
+                });
+
+            modelBuilder.Entity("Fikra.Service.Interface.SkillLevel", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("CVId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Technology")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CVId");
+
+                    b.ToTable("SkillLevel");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -556,6 +825,9 @@ namespace Fikra.Migrations
                     b.Property<string>("ImageProfileUrl")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -609,6 +881,17 @@ namespace Fikra.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Fikra.Models.CV", b =>
+                {
+                    b.HasOne("SparkLink.Models.Identity.ApplicationUser", "ApplicationUser")
+                        .WithOne("CV")
+                        .HasForeignKey("Fikra.Models.CV", "ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+                });
+
             modelBuilder.Entity("Fikra.Models.Contract", b =>
                 {
                     b.HasOne("SparkLink.Models.Identity.ApplicationUser", null)
@@ -632,6 +915,36 @@ namespace Fikra.Migrations
                     b.Navigation("Investor");
                 });
 
+            modelBuilder.Entity("Fikra.Models.GroupMember", b =>
+                {
+                    b.HasOne("SparkLink.Models.Identity.ApplicationUser", "ApplicationUser")
+                        .WithMany()
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Fikra.Models.ChatGroup", "Group")
+                        .WithMany("Members")
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+
+                    b.Navigation("Group");
+                });
+
+            modelBuilder.Entity("Fikra.Models.GroupMessage", b =>
+                {
+                    b.HasOne("Fikra.Models.ChatGroup", "ChatGroup")
+                        .WithMany("Messages")
+                        .HasForeignKey("ChatGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ChatGroup");
+                });
+
             modelBuilder.Entity("Fikra.Models.Idea", b =>
                 {
                     b.HasOne("SparkLink.Models.Identity.ApplicationUser", "IdeaOwner")
@@ -652,6 +965,25 @@ namespace Fikra.Migrations
                         .IsRequired();
 
                     b.Navigation("Idea");
+                });
+
+            modelBuilder.Entity("Fikra.Models.PenaltyPoint", b =>
+                {
+                    b.HasOne("SparkLink.Models.Identity.ApplicationUser", "ApplicationUser")
+                        .WithMany("penaltyPoints")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Fikra.Models.Complaint", "Complaint")
+                        .WithMany()
+                        .HasForeignKey("ComplaintId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+
+                    b.Navigation("Complaint");
                 });
 
             modelBuilder.Entity("Fikra.Models.Request", b =>
@@ -731,6 +1063,13 @@ namespace Fikra.Migrations
                     b.Navigation("Investor");
                 });
 
+            modelBuilder.Entity("Fikra.Service.Interface.SkillLevel", b =>
+                {
+                    b.HasOne("Fikra.Models.CV", null)
+                        .WithMany("Technologies")
+                        .HasForeignKey("CVId");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -782,6 +1121,18 @@ namespace Fikra.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Fikra.Models.CV", b =>
+                {
+                    b.Navigation("Technologies");
+                });
+
+            modelBuilder.Entity("Fikra.Models.ChatGroup", b =>
+                {
+                    b.Navigation("Members");
+
+                    b.Navigation("Messages");
+                });
+
             modelBuilder.Entity("Fikra.Models.Idea", b =>
                 {
                     b.Navigation("Ratings");
@@ -789,11 +1140,16 @@ namespace Fikra.Migrations
 
             modelBuilder.Entity("SparkLink.Models.Identity.ApplicationUser", b =>
                 {
+                    b.Navigation("CV")
+                        .IsRequired();
+
                     b.Navigation("Ideas");
 
                     b.Navigation("Requests");
 
                     b.Navigation("contracts");
+
+                    b.Navigation("penaltyPoints");
 
                     b.Navigation("signature")
                         .IsRequired();

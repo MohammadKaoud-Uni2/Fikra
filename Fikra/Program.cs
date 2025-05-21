@@ -72,6 +72,18 @@ app.UseStaticFiles(new StaticFileOptions
             Path.Combine(builder.Environment.ContentRootPath, "contracts")),
     RequestPath = "/contracts"
 });
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+            Path.Combine(builder.Environment.ContentRootPath, "cvs")),
+    RequestPath = "/cvs"
+});
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+            Path.Combine(builder.Environment.ContentRootPath, "complaints")),
+    RequestPath = "/complaints"
+});
 
 app.UseHttpsRedirection();
 
@@ -83,6 +95,7 @@ app.UseEndpoints(endpoints =>
    
     endpoints.MapControllers();
     endpoints.MapHub<ContractHub>("Hubs/ContractHub");
+    endpoints.MapHub<GroupChatHub>("Hubs/GroupChatHub");
 });
 //app.MapControllers();
 

@@ -24,10 +24,10 @@ namespace SparkLink.Data
                     }
                 }
 
-               
+
 
             }
-            if (roleManager.Roles.FirstOrDefault(x => x.Name == "Admin")==null)
+            if (roleManager.Roles.FirstOrDefault(x => x.Name == "Admin") == null)
             {
                 var result = await roleManager.CreateAsync(new IdentityRole("Admin"));
                 if (result.Succeeded)
@@ -37,36 +37,36 @@ namespace SparkLink.Data
                 }
                 return;
             }
-            var  AdminUserExist = await  userManager.Users.FirstOrDefaultAsync(x=>x.UserName=="KaoudAdmin");
+            var AdminUserExist = await userManager.Users.FirstOrDefaultAsync(x => x.UserName == "KaoudAdmin");
             if (AdminUserExist == null)
             {
                 var AdminUser = new ApplicationUser()
                 {
-                    Email="KaoudAdmin@gmail.com",
-                    UserName="KaoudAdmin",
-                    Gender="Male",
-                    LinkedinUrl="adminLinkedin",
-                    FatherName="Ahmad",
-                    Country="Syria",
-                    FirstName="Mo",
-                    LastName="Kaoud",
-                    CompanyName="FikraCompany"
+                    Email = "KaoudAdmin@gmail.com",
+                    UserName = "KaoudAdmin",
+                    Gender = "Male",
+                    LinkedinUrl = "adminLinkedin",
+                    FatherName = "Ahmad",
+                    Country = "Syria",
+                    FirstName = "Mo",
+                    LastName = "Kaoud",
+                    CompanyName = "FikraCompany"
                 };
                 AdminUser.EmailConfirmed = true;
-                var resultofcreatingadminuser=await userManager.CreateAsync(AdminUser,"Suarez.123!@#qwe");
+                var resultofcreatingadminuser = await userManager.CreateAsync(AdminUser, "Suarez.123!@#qwe");
                 if (resultofcreatingadminuser.Succeeded)
                 {
-                    var resultAssignToAdminRole= await userManager.AddToRoleAsync(AdminUser, "Admin");
+                    var resultAssignToAdminRole = await userManager.AddToRoleAsync(AdminUser, "Admin");
                     if (resultAssignToAdminRole.Succeeded)
                     {
                         Console.WriteLine("AssignToAdmin Role Assign Successfully");
                         return;
                     }
-                    return ;
+                    return;
                 }
             }
-          
-          
+
+
 
 
 

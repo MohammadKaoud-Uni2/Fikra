@@ -1,4 +1,5 @@
 ﻿using Fikra.Helper;
+using Fikra.Hubs;
 using Fikra.Service.Implementation;
 using Fikra.Service.Interface;
 using Microsoft.AspNetCore.Identity;
@@ -33,6 +34,14 @@ namespace SparkLink.Service
             services.AddScoped<IMessageRepo, MessageRepo>();
             services.AddScoped<IRequestRepo,RequestRepo>();
             services.AddScoped<IIdeaRating,IdeaRatingService>();
+            services.AddScoped<ICVService, CVService>();
+            services.AddScoped<IJoinRequestService, JoinRequestService>();
+            services.AddSingleton<PresenceTracker>();
+            services.AddScoped<ContractHub>();
+            services.AddScoped<IPresistanceGroupService,PersistentGroupService>();
+            services.AddScoped<IGroupMessageService, GroupMessageService>();
+            services.AddScoped<IPenaltyPointService, PenaltyPointService>();
+            services.AddScoped<IComplaintService, ComplaintService>();
 
             return services;    
         }

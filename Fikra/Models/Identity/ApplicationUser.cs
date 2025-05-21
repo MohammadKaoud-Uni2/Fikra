@@ -2,6 +2,7 @@
 using Fikra.Models;
 using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 
 
@@ -16,6 +17,7 @@ namespace SparkLink.Models.Identity
             Requests = new HashSet<Request>();
             transactions=new HashSet<Transaction>();
             Ideas=new HashSet<Idea>();
+            penaltyPoints=new HashSet<PenaltyPoint>();
         }
         [Required]
         public string FirstName { get; set; }
@@ -39,6 +41,9 @@ namespace SparkLink.Models.Identity
         public Signature signature { get; set; }
         public ICollection<Transaction> transactions { get; set; }
         public ICollection<Idea>Ideas { get; set; }
+        public ICollection<PenaltyPoint> penaltyPoints { get; set; }
+        public bool IsActive { get; set; } = true;
+        public CV CV { get; set; }
 
 
     }
