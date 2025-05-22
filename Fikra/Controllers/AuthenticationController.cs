@@ -103,16 +103,16 @@ namespace Fikra.Controllers
 
                 if (resultofAssignUserToRole.Succeeded)
                 {
-                    var emailVerificationResult = await _emailService.SendEmail(NewUser.Email, $"Welcome {NewUser.UserName} This Email for Verification your Account ", "Person Verification");
-                    if (emailVerificationResult == "Success")
-                    {
+                    //var emailVerificationResult = await _emailService.SendEmail(NewUser.Email, $"Welcome {NewUser.UserName} This Email for Verification your Account ", "Person Verification");
+                    //if (emailVerificationResult == "Success")
+                    //{
 
 
                         NewUser.EmailConfirmed = true;
                         await _userManager.UpdateAsync(NewUser);
                         return Ok();
-                    }
-                    return BadRequest("User Have Been Registered But There Was A problem While Sending The Email");
+                    //}
+                    //return BadRequest("User Have Been Registered But There Was A problem While Sending The Email");
                 }
                 return BadRequest("There Was  A problem While Assign Role To user");
             }
