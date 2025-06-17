@@ -27,9 +27,10 @@ namespace Fikra.Service.Implementation
         private readonly IIdeaService _IdeaService;
         private readonly ICVService _cvService;
         private readonly IMapper _mapper;
+        private readonly IMoneyTransferRepo _moneyTransferRepo;
 
         private readonly ITransictionRepo _transictionRepo;
-        public PdfService(IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor, IRSAService rsaService,ISignatureRepo signatureRepo,UserManager<ApplicationUser>UserManager,IContractRepo contractRepo,IConfiguration configuration,IStripeService stripeService,IStripeAccountsRepo stripeAccountsRepo,IStripeCustomer stripeCustomer,ITransictionRepo transictionRepo,IIdeaService ideaService,ICVService cVService,IMapper mapper)
+        public PdfService(IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor, IRSAService rsaService,ISignatureRepo signatureRepo,UserManager<ApplicationUser>UserManager,IContractRepo contractRepo,IConfiguration configuration,IStripeService stripeService,IStripeAccountsRepo stripeAccountsRepo,IStripeCustomer stripeCustomer,ITransictionRepo transictionRepo,IIdeaService ideaService,ICVService cVService,IMapper mapper,IMoneyTransferRepo moneyTransferRepo)
         {
             _webHostEnvironment = webHostEnvironment;
             _httpContextAccessor = httpContextAccessor;
@@ -45,6 +46,7 @@ namespace Fikra.Service.Implementation
             _IdeaService= ideaService;
             _cvService = cVService;
             _mapper = mapper;
+            _moneyTransferRepo = moneyTransferRepo;
         }
 
         public async Task<string> GenerateContract(string ideaOwnerName, string investorName, double budget, DateTime date, string IdeaownerSignature, string investorSignature, byte[] logoBytes,string ideaTitle, double ideaOwnerPercentage)
@@ -222,17 +224,18 @@ namespace Fikra.Service.Implementation
             //end AdminSection
             // start for IDeaOwnerSection
             var stripeAccounts =  _stripeAccountsRepo.GetTableAsNoTracking().Include(x => x.ApplicationUser);
-            var checkIdeaOwner=await stripeAccounts.FirstOrDefaultAsync(x=>x.ApplicationUser.UserName==firstPeerNameToCheck.UserName);
+            var checkIdeaOwner=await stripeAccounts.FirstOrDefaultAsync(x=>x.ApplicationUser.UserName== "KaoudAdmin");
+            var Admin = await _userManager.FindByNameAsync("KaoudAdmin");
             if (checkIdeaOwner == null)
             {
                
 
-                var stripeAccountId = await _stripeService.CreateConnectedAccount(firstPeerNameToCheck.Email, firstPeerNameToCheck.FirstName, firstPeerNameToCheck.LastName, firstPeerNameToCheck.UserName, PostCode: null, city: null, state: null);
+                var stripeAccountId = await _stripeService.CreateConnectedAccount(Admin.Email, Admin.FirstName, Admin.LastName, Admin.UserName, PostCode: null, city: null, state: null);
 
 
                 var stripeAccount = new StripeAccount
                 {
-                    ApplicationUserId = firstPeerNameToCheck.Id,
+                    ApplicationUserId = Admin.Id,
                     StripeAccountId = stripeAccountId,
                     BusinessType = "Personal",
                     CreatedAt = DateTime.UtcNow
@@ -244,11 +247,11 @@ namespace Fikra.Service.Implementation
             var getTableofCustomersAfter =await  _stripeCustomerRepo.GetTableAsNoTracking().Include(x => x.ApplicationUser).ToListAsync();
             var getInvestorCustomerAccount = getTableofCustomersAfter.FirstOrDefault(x => x.ApplicationUserId == secondPeerNametoCheck.Id);
             var getTablesofAccountsAfter=await _stripeAccountsRepo.GetTableAsNoTracking().Include(x=>x.ApplicationUser).ToListAsync();
-            var getIdeaOwnerConnectedAccount =  getTablesofAccountsAfter.FirstOrDefault(x => x.ApplicationUserId == firstPeerNameToCheck.Id);
+            var getAdminAcount =  getTablesofAccountsAfter.FirstOrDefault(x => x.ApplicationUserId == Admin.Id);
 
             try
             {
-                var result = await _stripeService.SimulateInvestmentToAdmin(getInvestorCustomerAccount.StripeCustomerId, getIdeaOwnerConnectedAccount.StripeAccountId, budget);
+                var result = await _stripeService.SimulateInvestmentToAdmin(getInvestorCustomerAccount.StripeCustomerId, getAdminAcount.StripeAccountId, budget);
                 var newTransaction = new Transaction()
                 {
                     Amount = budget,
@@ -269,6 +272,16 @@ namespace Fikra.Service.Implementation
             {
                 Console.WriteLine(ex.ToString());
             }
+            var AmountAfterPercentageIt = ((long)budget) * ideaOwnerPercentage / 100;
+            var moneyTransferRequest = new MoneyTransferRequest
+            {
+                Amount = AmountAfterPercentageIt,
+                ReceiverUserName = firstPeerNameToCheck.UserName,
+                Statue = "Pending"
+            };
+           await  _moneyTransferRepo.AddAsync(moneyTransferRequest);
+           await  _moneyTransferRepo.SaveChangesAsync();
+           
 
 
 

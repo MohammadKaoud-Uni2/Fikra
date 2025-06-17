@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Reflection.Emit;
 using SparkLink.Helper;
 using Fikra.Models;
+using Fikra.Controllers;
 namespace SparkLink.Data
 {
     public class ApplicationDbContext:IdentityDbContext<ApplicationUser>
@@ -57,7 +58,7 @@ namespace SparkLink.Data
                 .OnDelete(DeleteBehavior.Restrict);
             builder.Entity<CV>().HasOne(c=>c.ApplicationUser).WithOne(x=>x.CV).OnDelete(DeleteBehavior.Cascade);
 
-
+            builder.Entity<CV>().HasMany(x => x.Technologies).WithOne(x => x.CV).HasForeignKey(x => x.CVId).OnDelete(DeleteBehavior.Cascade);
 
             base.OnModelCreating(builder);
         }
@@ -76,7 +77,8 @@ namespace SparkLink.Data
         public DbSet<ChatGroup>ChatGroups { get; set; }
         public DbSet<Complaint> Complaints { get; set; }
         public DbSet<PenaltyPoint> penaltyPoints { get; set; }
-
+        public DbSet<MoneyTransferRequest> moneyTransferRequests { get; set; }
+        public DbSet<Draft> Drafts { get; set; }
         public DbSet<GroupMessage>GroupesMessages { get; set; }
 
 

@@ -16,7 +16,7 @@ namespace Fikra.Models
         public string RequestDetail { get; set; }
         public string IdeaOwnerName { get; set; }
         public string InvestorName { get; set; }
-
+        public string IdeaTitle { get; set; }
       
         public ApplicationUser IdeaOwner { get; set; }
         public string Status { get; set; }

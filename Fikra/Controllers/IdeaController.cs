@@ -397,7 +397,7 @@ namespace Fikra.Controllers
                 return Ok(ideasDto);
 
             }
-            return BadRequest("Failed While Fetching the Ideas From Db!");
+            return Ok(new List<GetIdeaDto>());
 
         }
         [HttpGet]
@@ -469,12 +469,10 @@ namespace Fikra.Controllers
                 return Ok(ideasAftermappingforfreelancer);
 
             }
-            return Ok(new
-            {
-                message = "Db Does not Contian any Ideas right now!:"
-            });
+            return Ok(new List<GetFreelancerIdeasDto>());
 
         }
+        
 
         
     }

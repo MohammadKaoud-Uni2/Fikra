@@ -114,7 +114,7 @@ namespace Fikra.Controllers
             }
 
 
-            return Ok("Job request sent successfully.");
+            return Ok();
         }
         [HttpGet]
         [Route("GetJobRequests")]
@@ -130,11 +130,25 @@ namespace Fikra.Controllers
                 receiveRequests = _mapper.Map<List<ReceiveJobRequest>>(JointRequest);
                 return Ok(receiveRequests);
             }
-            return Ok(new
-            {
-                message = "there are  no Job request in Db"
-            });
+            return Ok (new List<ReceiveJobRequest>());  
+            
 
+        }
+        [HttpPost]
+        [Route("RejectRequest")]
+        [Authorize(AuthenticationSchemes ="Bearer")]
+
+        public async Task<IActionResult> RejectJobRequest([FromQuery] int  jobRequestId)
+        {
+            var jobRequest = await _joinRequestService.GetTableAsNoTracking().FirstOrDefaultAsync(x => x.Id==jobRequestId);
+           if(jobRequest == null)
+            {
+                return NotFound();
+            }
+            jobRequest.Status = "Rejected";
+          await  _joinRequestService.UpdateAsync(jobRequest);
+            await _joinRequestService.SaveChangesAsync();
+            return Ok();
         }
         [HttpPost("accept")]
         [Authorize(AuthenticationSchemes = "Bearer")]
@@ -144,6 +158,7 @@ namespace Fikra.Controllers
             var CurrentUser = await _userManager.FindByNameAsync(CurrentUserName);
 
             if (CurrentUser == null)
+
             {
                 return Unauthorized("User not authenticated.");
             }
@@ -212,12 +227,10 @@ namespace Fikra.Controllers
                 }
                return Ok(groupsDto);
             }
-            return Ok(new
-            {
-                message = "there is no Group With Related User"
-
-            });
+            return Ok(new List<getChatGroupDto>());
+            
         }
+
         
 
     
@@ -230,6 +243,7 @@ namespace Fikra.Controllers
     }
     public class ReceiveJobRequest
     {
+        public int  Id { get; set; }
         public string Message { get; set; }
         public DateTime SentAt { get; set; }
         public string ideaTitle { get; set; }

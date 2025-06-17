@@ -28,7 +28,7 @@ namespace Fikra.Service.Implementation
         {
             _context = context;
             _httpClient = new HttpClient();
-            _openRouterApiKey = "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";
+            _openRouterApiKey = "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";
 
 
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_openRouterApiKey}");
@@ -302,6 +302,7 @@ namespace Fikra.Service.Implementation
                     }).ToList()
             };
         }
+
         private async Task<SWOTAnalysis> GetAISWOTAnalysis(Idea idea)
         {
 
@@ -347,6 +348,7 @@ namespace Fikra.Service.Implementation
             int payingUsers = (int)(expectedUsers * (pricing.ExpectedConversionRate / 100.0));
 
             return payingUsers * pricing.MonthlyPrice;
+            
         }
 
 

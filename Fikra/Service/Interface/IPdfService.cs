@@ -31,6 +31,8 @@ namespace Fikra.Service.Interface
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public string Id { get; set; }
         public string Technology { get; set; }
-        public string Level { get; set; } 
+        public string Level { get; set; }
+        public CV CV { get; set; }
+        public string CVId { get; set; }
     }
 }

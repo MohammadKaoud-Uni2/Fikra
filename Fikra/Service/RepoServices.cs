@@ -42,6 +42,8 @@ namespace SparkLink.Service
             services.AddScoped<IGroupMessageService, GroupMessageService>();
             services.AddScoped<IPenaltyPointService, PenaltyPointService>();
             services.AddScoped<IComplaintService, ComplaintService>();
+            services.AddScoped<IMoneyTransferRepo,MoneyTransferRepo>();
+            services.AddScoped<IDraftRepo,DraftRepo>();
 
             return services;    
         }

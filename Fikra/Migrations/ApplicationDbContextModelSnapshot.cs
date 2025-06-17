@@ -22,6 +22,43 @@ namespace Fikra.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Fikra.Controllers.Draft", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<double>("Budget")
+                        .HasColumnType("float");
+
+                    b.Property<double>("IdeaOwnerPercentage")
+                        .HasColumnType("float");
+
+                    b.Property<string>("IdeaTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SecondUserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Signature")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Statue")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Drafts");
+                });
+
             modelBuilder.Entity("Fikra.Models.CV", b =>
                 {
                     b.Property<string>("Id")
@@ -434,6 +471,28 @@ namespace Fikra.Migrations
                     b.ToTable("Messages");
                 });
 
+            modelBuilder.Entity("Fikra.Models.MoneyTransferRequest", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<double>("Amount")
+                        .HasColumnType("float");
+
+                    b.Property<string>("ReceiverUserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Statue")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("moneyTransferRequests");
+                });
+
             modelBuilder.Entity("Fikra.Models.PenaltyPoint", b =>
                 {
                     b.Property<string>("Id")
@@ -481,6 +540,10 @@ namespace Fikra.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("IdeaOwnerName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IdeaTitle")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -631,6 +694,7 @@ namespace Fikra.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("CVId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Level")
@@ -1065,9 +1129,13 @@ namespace Fikra.Migrations
 
             modelBuilder.Entity("Fikra.Service.Interface.SkillLevel", b =>
                 {
-                    b.HasOne("Fikra.Models.CV", null)
+                    b.HasOne("Fikra.Models.CV", "CV")
                         .WithMany("Technologies")
-                        .HasForeignKey("CVId");
+                        .HasForeignKey("CVId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CV");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

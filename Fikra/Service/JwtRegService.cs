@@ -88,15 +88,7 @@ namespace SparkLink.Service
                     }
                 });
             });
-            //services.AddAuthorization(x =>
-            //{
-            //    x.AddPolicy("CreateStudent", p =>
-            //    {
-            //        p.RequireClaim("Create Student", true.ToString());
-            //    });
-
-            //});
-
+   
             return services;
         }
     }

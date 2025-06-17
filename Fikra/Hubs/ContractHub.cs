@@ -9,6 +9,7 @@ using Fikra.Models;
 using Microsoft.AspNetCore.Identity;
 using SparkLink.Models.Identity;
 using Fikra.Models.Dto;
+using Microsoft.EntityFrameworkCore;
 
 namespace Fikra.Hubs
 {
@@ -107,7 +108,7 @@ namespace Fikra.Hubs
             }
         }
         [Authorize(Roles = "Investor")]
-        public async Task SendInvestmentRequest(string recipientUsername, string requestDetails)
+        public async Task SendInvestmentRequest(string recipientUsername, string requestDetails ,string IdeaTitle)
         {
             var senderUsername = Context.User?.Identity?.Name;
 
@@ -146,8 +147,9 @@ namespace Fikra.Hubs
                 Status = "Pending",
                 InvestorName = senderUsername,
                 IdeaOwnerName = recipientUsername,
+                IdeaTitle = IdeaTitle,
                 RequestDetail = _IrsService.EncryptData(requestDetails)
-                
+
 
 
 
@@ -156,10 +158,13 @@ namespace Fikra.Hubs
 
             if (Users.TryGetValue(recipientUsername, out var recipientConnectionId))
             {
-              
+                await _requestRepo.AddAsync(investmentRequest);
+                await _requestRepo.SaveChangesAsync();
                 await Clients.Client(recipientConnectionId).SendAsync("ReceiveInvestmentRequest",
                     senderUsername,
                     requestDetails);
+             
+
             }
             else
             {
@@ -172,14 +177,10 @@ namespace Fikra.Hubs
         }
 
         [Authorize(Roles ="IdeaOwner")]
-        public async Task AcceptInvestmentRequest(string senderUsername)
+        public async Task AcceptInvestmentRequest(string RequestId)
         {
             var recipientUsername = Context.User?.Identity?.Name;
-            if (senderUsername.Equals(recipientUsername, StringComparison.OrdinalIgnoreCase))
-            {
-                await Clients.Caller.SendAsync("ReciveMessage", "You Cannot Accept Request from yourself");
-                return;
-            }
+            
 
             if (string.IsNullOrEmpty(recipientUsername))
             {
@@ -189,26 +190,16 @@ namespace Fikra.Hubs
                 return;
             }
 
-            if (Users.TryGetValue(senderUsername, out var senderConnectionId))
-            {
-
-
-               var request=await  _requestRepo.GetRequestBetweenTwoUsers(recipientUsername, senderUsername);
-                await _requestRepo.UpdateRequest(request);
-               
-                await Clients.Client(senderConnectionId).SendAsync("InvestmentRequestAccepted", recipientUsername);
-            }
+           var request=await  _requestRepo.GetTableAsNoTracking().FirstOrDefaultAsync(x=>x.Id == RequestId);
+            request.Status = "Accepted";
+           await  _requestRepo.UpdateAsync(request);
+            await _requestRepo.SaveChangesAsync();
         }
         [Authorize(Roles ="IdeaOwner")]
-        public async Task RejectInvestmentRequest(string senderUsername)
+        public async Task RejectInvestmentRequest(string RequestId)
         {
             var recipientUsername = Context.User?.Identity?.Name;
-            if (senderUsername.Equals(recipientUsername, StringComparison.OrdinalIgnoreCase))
-            {
-                await Clients.Caller.SendAsync("ReciveMessage", "You Cannot Accept Request from yourself");
-                return;
-
-            }
+            
           
 
             if (string.IsNullOrEmpty(recipientUsername))
@@ -217,12 +208,10 @@ namespace Fikra.Hubs
                 return;
             }
 
-            if (Users.TryGetValue(senderUsername, out var senderConnectionId))
-            {
-                var request = await _requestRepo.GetRequestBetweenTwoUsers(recipientUsername, senderUsername);
-                await _requestRepo.RejectRequest(request);
-                await Clients.Client(senderConnectionId).SendAsync("InvestmentRequestRejected", recipientUsername);
-            }
+            var request=await _requestRepo.GetTableAsNoTracking().FirstOrDefaultAsync(x=>x.Id==RequestId);
+            request.Status = "Rejected";
+           await  _requestRepo.UpdateAsync(request);
+            await _requestRepo.SaveChangesAsync();
         }
 
         public override async Task OnDisconnectedAsync(Exception exception)

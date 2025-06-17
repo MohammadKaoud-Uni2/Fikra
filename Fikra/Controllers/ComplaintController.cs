@@ -70,6 +70,7 @@ namespace Fikra.Controllers
             {
                 message = "Complaint has Been sent to Admin  Wait for Response :)"
             });
+            
         }
         [Route("GetAllComplaints")]
         //[Authorize(AuthenticationSchemes ="Bearer",Roles ="Admin")]

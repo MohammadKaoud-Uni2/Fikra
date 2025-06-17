@@ -66,5 +66,19 @@ namespace Fikra.Controllers
             });
 
         }
+        [HttpGet]
+        [Route("CheckCvExist")]
+        [Authorize(AuthenticationSchemes ="Bearer",Roles ="Freelancer")]
+        public async Task<IActionResult> CheckCv()
+        {
+            var currentUserName=await _identityService.GetCurrentUserName();
+            var currentUser=await _userManager.FindByNameAsync(currentUserName);
+            var cv = await _cvService.GetTableAsNoTracking().Include(x => x.ApplicationUser).FirstOrDefaultAsync(x => x.ApplicationUserId == currentUser.Id);
+            if (cv != null)
+            {
+                return Ok(true);
+            }
+            return Ok(false);
+        }
     }
 }

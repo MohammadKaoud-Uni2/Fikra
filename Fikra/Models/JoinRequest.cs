@@ -5,7 +5,7 @@ namespace Fikra.Models
     public class JoinRequest
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int   Id { get; set; }
         public string FreelancerId { get; set; }
         public string ideaTitle { get; set; }
         public string Message { get; set; }

@@ -37,7 +37,7 @@ namespace Fikra.Service.Implementation
 
         public async Task<List<Request>> GetRequestByUserName(string UserName)
         {
-           var requests= await _context.Requests.AsNoTracking().Where(x=>x.IdeaOwnerName==UserName && x.Status=="Pending").ToListAsync();
+           var requests= await _context.Requests.AsNoTracking().Where(x=>x.IdeaOwnerName==UserName).ToListAsync();
             if (requests != null)
             {
                 return requests;

@@ -233,6 +233,10 @@ namespace Fikra.Controllers
           var currentUserName=await  _identityServices.GetCurrentUserName();
           var user=await _userManager.FindByNameAsync(currentUserName);
             var StripeCustomerAccount = await _stripeAccountsRepo.GetTableAsTracking().FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id);
+            if (StripeCustomerAccount == null)
+            {
+                return Ok(0);
+            }
            var balanceforcustomer=await _stripeService.GetCustomerBalance(StripeCustomerAccount.StripeAccountId);
             if(balanceforcustomer !=0)
             {
